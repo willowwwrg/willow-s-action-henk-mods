@@ -22,11 +22,11 @@ A collection of mods for Action Henk, applied to the decompiled game source and 
 
 ### Steps
 
-1. Clone this repo into a folder — this is your working source directory
+1. Clone this repo into a folder - this is your working source directory
 
 2. Open the folder and apply the two required compile fixes if they aren't already in the repo:
-   - `EventDelegate.cs` — the field named `field` must be renamed to `fieldName`
-   - `MegaShapeSXL.cs` — `int num;` must be changed to `int num = 0;`
+   - `EventDelegate.cs` - the field named `field` must be renamed to `fieldName`
+   - `MegaShapeSXL.cs` - `int num;` must be changed to `int num = 0;`
    
    These are decompiler artifacts in the vanilla source. They are already fixed in this repo.
 
