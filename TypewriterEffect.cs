@@ -1,0 +1,171 @@
+using System.Text;
+using UnityEngine;
+
+[RequireComponent(typeof(UILabel))]
+[AddComponentMenu("NGUI/Interaction/Typewriter Effect")]
+public class TypewriterEffect : MonoBehaviour
+{
+	private struct FadeEntry
+	{
+		public int index;
+
+		public string text;
+
+		public float alpha;
+	}
+
+	public int charsPerSecond = 20;
+
+	public float fadeInTime;
+
+	public float delayOnPeriod;
+
+	public float delayOnNewLine;
+
+	public UIScrollView scrollView;
+
+	public bool keepFullDimensions;
+
+	private UILabel mLabel;
+
+	private string mFullText = string.Empty;
+
+	private int mCurrentOffset;
+
+	private float mNextChar;
+
+	private bool mReset = true;
+
+	private BetterList<FadeEntry> mFade = new BetterList<FadeEntry>();
+
+	public void ResetToBeginning()
+	{
+		mReset = true;
+	}
+
+	private void OnEnable()
+	{
+		mReset = true;
+	}
+
+	private void Update()
+	{
+		if (mReset)
+		{
+			mCurrentOffset = 0;
+			mReset = false;
+			mLabel = GetComponent<UILabel>();
+			mFullText = mLabel.processedText;
+			mFade.Clear();
+			if (keepFullDimensions && scrollView != null)
+			{
+				scrollView.UpdatePosition();
+			}
+		}
+		if (mCurrentOffset < mFullText.Length && mNextChar <= RealTime.time)
+		{
+			int num = mCurrentOffset;
+			charsPerSecond = Mathf.Max(1, charsPerSecond);
+			while (NGUIText.ParseSymbol(mFullText, ref mCurrentOffset))
+			{
+			}
+			mCurrentOffset++;
+			float num2 = 1f / (float)charsPerSecond;
+			char c = ((num >= mFullText.Length) ? '\n' : mFullText[num]);
+			if (c == '\n')
+			{
+				num2 += delayOnNewLine;
+			}
+			else if (num + 1 == mFullText.Length || mFullText[num + 1] <= ' ')
+			{
+				switch (c)
+				{
+				case '.':
+					if (num + 2 < mFullText.Length && mFullText[num + 1] == '.' && mFullText[num + 2] == '.')
+					{
+						num2 += delayOnPeriod * 3f;
+						num += 2;
+					}
+					else
+					{
+						num2 += delayOnPeriod;
+					}
+					break;
+				case '!':
+				case '?':
+					num2 += delayOnPeriod;
+					break;
+				}
+			}
+			mNextChar = RealTime.time + num2;
+			if (fadeInTime != 0f)
+			{
+				FadeEntry item = new FadeEntry
+				{
+					index = num,
+					alpha = 0f,
+					text = mFullText.Substring(num, mCurrentOffset - num)
+				};
+				mFade.Add(item);
+			}
+			else
+			{
+				mLabel.text = ((!keepFullDimensions) ? mFullText.Substring(0, mCurrentOffset) : (mFullText.Substring(0, mCurrentOffset) + "[00]" + mFullText.Substring(mCurrentOffset)));
+				if (!keepFullDimensions && scrollView != null)
+				{
+					scrollView.UpdatePosition();
+				}
+			}
+		}
+		if (mFade.size == 0)
+		{
+			return;
+		}
+		int num3 = 0;
+		while (num3 < mFade.size)
+		{
+			FadeEntry value = mFade[num3];
+			value.alpha += RealTime.deltaTime / fadeInTime;
+			if (value.alpha < 1f)
+			{
+				mFade[num3] = value;
+				num3++;
+			}
+			else
+			{
+				mFade.RemoveAt(num3);
+			}
+		}
+		if (mFade.size == 0)
+		{
+			if (keepFullDimensions)
+			{
+				mLabel.text = mFullText.Substring(0, mCurrentOffset) + "[00]" + mFullText.Substring(mCurrentOffset);
+			}
+			else
+			{
+				mLabel.text = mFullText.Substring(0, mCurrentOffset);
+			}
+			return;
+		}
+		StringBuilder stringBuilder = new StringBuilder();
+		for (int i = 0; i < mFade.size; i++)
+		{
+			FadeEntry fadeEntry = mFade[i];
+			if (i == 0)
+			{
+				stringBuilder.Append(mFullText.Substring(0, fadeEntry.index));
+			}
+			stringBuilder.Append('[');
+			stringBuilder.Append(NGUIText.EncodeAlpha(fadeEntry.alpha));
+			stringBuilder.Append(']');
+			stringBuilder.Append(fadeEntry.text);
+		}
+		if (keepFullDimensions)
+		{
+			stringBuilder.Append("[00]");
+			stringBuilder.Append(mFullText.Substring(mCurrentOffset));
+		}
+		mLabel.text = stringBuilder.ToString();
+	}
+}

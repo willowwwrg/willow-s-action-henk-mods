@@ -1,0 +1,27 @@
+public enum Achievement
+{
+	BetsyChallenge,
+	NeilChallenge,
+	KentonyChallenge1,
+	CedarChallenge,
+	KentonyChallenge2,
+	Redemption,
+	UploadCustomLevel,
+	AllBonus,
+	AllBronze,
+	AllSilver,
+	AllGold,
+	AllRainbow,
+	FloorIsLava,
+	ChallengeFriend,
+	RageQuit,
+	OnePercent,
+	Barrier,
+	WinMultiplayer,
+	ResetXTimes,
+	DieXTimes,
+	Airtime,
+	Marathon,
+	Buttslide,
+	Henkvsgame
+}

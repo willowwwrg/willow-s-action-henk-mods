@@ -1,0 +1,7 @@
+public enum MegaHoseSmooth
+{
+	SMOOTHALL,
+	SMOOTHNONE,
+	SMOOTHSIDES,
+	SMOOTHSEGS
+}

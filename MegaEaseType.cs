@@ -1,0 +1,23 @@
+public enum MegaEaseType
+{
+	bounce,
+	InSine,
+	InOutSine,
+	InOutExpo,
+	InOutCirc,
+	InQuad,
+	OutQuad,
+	InOutQuad,
+	InOutCubic,
+	InOutQuart,
+	InQuint,
+	OutQuint,
+	InOutQuint,
+	InBack,
+	OutBack,
+	InOutBack,
+	spring,
+	Clerp,
+	Lerp,
+	Nice
+}

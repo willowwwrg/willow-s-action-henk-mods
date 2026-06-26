@@ -1,0 +1,20 @@
+public enum Mutator
+{
+	None,
+	LowGravity,
+	InvertedControls,
+	BlindMode,
+	Trippin,
+	Haste,
+	DoubleJump,
+	SuperJump,
+	Spiderman,
+	TinyWings,
+	FirstPerson,
+	OppositeCamera,
+	Pixelated,
+	RotatingCamera,
+	Invisible,
+	NUM_MUTATORS,
+	SlideOnly
+}
