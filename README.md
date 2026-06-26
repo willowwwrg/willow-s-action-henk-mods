@@ -4,11 +4,11 @@ A collection of mods for Action Henk, applied to the decompiled game source and 
 
 ## What's included
 
-- **Challenge & Bonus Ghost Select** — adds a ghost opponent picker to challenge and bonus levels, matching the options available on normal levels
-- **Bonus Level Twitch Ghosts** — allows IRC/Twitch ghosts to spawn on bonus levels
-- **Environment Derendering** — extends the existing dev console rendering groups system to Island and City levels, and adds a Snow toggle on Henkmas levels
-- **Replay Skin Remap** — remaps certain skins before they are written to replays, affecting both local saves and Steam leaderboard submissions
-- **MOTD Credit** — updates the message of the day to credit the mod
+- **Challenge & Bonus Ghost Select** adds a ghost opponent picker to challenge and bonus levels, matching the options available on normal levels
+- **Bonus Level Twitch Ghosts** allows IRC/Twitch ghosts to spawn on bonus levels
+- **Environment Derendering** extends the existing dev console rendering groups system to Island and City levels, and adds a Snow toggle on Henkmas levels
+- **Replay Skin Remap** remaps certain skins before they are written to replays, affecting both local saves and Steam leaderboard submissions
+- **MOTD Credit** updates the message of the day to credit the mod
 
 ---
 
