@@ -53,6 +53,6 @@ A collection of mods for Action Henk, applied to the decompiled game source and 
 
 ## Notes
 
-- The build will produce ~242 warnings — these are all pre-existing decompiler artifacts and can be ignored
-- The dev console (rendering groups, FPS counter etc.) is a vanilla feature gated behind a developer Steam ID check — the derender groups added by this mod will only be accessible if you have dev console access
+- The build will produce ~242 warnings - these are all pre-existing decompiler artifacts and can be ignored
+- The dev console (rendering groups, FPS counter etc.) is a vanilla feature gated behind a developer Steam ID check - the derender groups added by this mod will only be accessible if you have dev console access
 - Tested on Action Henk version available on Steam as of 2025
