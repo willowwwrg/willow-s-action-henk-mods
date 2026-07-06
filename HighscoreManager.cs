@@ -306,9 +306,10 @@ public class HighscoreManager : Singleton<HighscoreManager>
 
 	public string ConvertTimeToString(float time, bool showHundreds = true)
 	{
-		int num = Mathf.FloorToInt(time / 60f);
-		int num2 = Mathf.FloorToInt(time) - num * 60;
-		int num3 = Mathf.RoundToInt((time - Mathf.Floor(time)) * 100f);
+		string empty = string.Empty;
+		float num = Mathf.FloorToInt(time / 60f);
+		float num2 = (float)Mathf.FloorToInt(time) - num * 60f;
+		float num3 = Mathf.RoundToInt((time - Mathf.Floor(time)) * 100f);
 		if (showHundreds)
 			return string.Format("{0:00}:{1:00}.{2:00}", num, num2, num3);
 		return string.Format("{0:00}:{1:00}", num, num2);

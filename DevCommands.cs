@@ -248,8 +248,8 @@ public class DevCommands : MonoBehaviour
 			text += "[007FFF]9.[-] Party Train!\n";
 			string splitColor = (Singleton<BonusSplitManager>.SP.SplitFrequency == 0) ? "[FF0000]" : "[00FF00]";
 			text += "[007FFF]Q.[-] Cycle bonus splits: " + splitColor + splitModeLabels[Singleton<BonusSplitManager>.SP.SplitFrequency] + "[-]\n";
-			string fgmColor = IsFullGameMode() ? "[00FF00]" : "[FF0000]";
-			text += "[007FFF]F.[-] Challenge and bonus ghosts: " + fgmColor + (IsFullGameMode() ? "On" : "Off") + "[-]\n";
+			string fgmColor = IsFullGameMode() ? "[FF0000]" : "[00FF00]";
+			text += "[007FFF]F.[-] Challenge and bonus ghosts: " + fgmColor + (IsFullGameMode() ? "Off" : "On") + "[-]\n";
 			label.text = text;
 			return;
 		}
