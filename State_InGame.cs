@@ -27,6 +27,8 @@ public class State_InGame : GameState
 		Singleton<PlayerManager>.SP.TogglePlayerControls(PlayerType.All, state: true);
 		Singleton<PlayerManager>.SP.GetPlayer().GetComponent<PlayerGraphics>().ParticleEvent(SfxEvents.ControlEnabled);
 		UpdateCollectibles();
+		// Initialise bonus split tracking
+		Singleton<BonusSplitManager>.SP.OnLevelLoad();
 		if (Singleton<Workshop>.SP.validating && !Singleton<Workshop>.SP.validationMsgShown)
 		{
 			StartCoroutine(DelayPopup());

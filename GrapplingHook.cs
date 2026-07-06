@@ -193,7 +193,7 @@ public class GrapplingHook : MonoBehaviour
 			{
 				suctionPos = hookContainer.suctionModel.position;
 			}
-			if (!GetComponent<PlayerGraphics>().hasGhostGraphics)
+			if (!graphics.hasGhostGraphics)
 			{
 				hookContainer.TriggerShootHook();
 			}
@@ -209,7 +209,7 @@ public class GrapplingHook : MonoBehaviour
 			{
 				suctionPos = hookContainer.suctionModel.localPosition;
 			}
-			if (!GetComponent<PlayerGraphics>().hasGhostGraphics)
+			if (!graphics.hasGhostGraphics)
 			{
 				hookContainer.TriggerHookRelease();
 			}
@@ -285,9 +285,6 @@ public class GrapplingHook : MonoBehaviour
 			float num6 = Vector3.Dot(playerCollider.velocity, hookDir) / Time.fixedDeltaTime;
 			float num7 = num5 * stiffness - num6 * damping;
 			playerCollider.velocity += num7 * hookDir * Time.fixedDeltaTime;
-			Debug.DrawLine(base.transform.position, hookPoint, Color.green);
-			Debug.DrawRay(base.transform.position, sideDir * walkInput * 5f, Color.cyan);
-			Debug.DrawRay(base.transform.position + sideDir * walkInput * 5f, hookDir * verticalInput * 5f, Color.cyan);
 			if (!graphics.hasGhostGraphics)
 			{
 				hookContainer.UpdateSwing(playerCollider.velocity.magnitude);
@@ -401,19 +398,16 @@ public class GrapplingHook : MonoBehaviour
 	public void SetHookAlpha(float hookAlpha)
 	{
 		if (!hookContainer)
-		{
 			return;
-		}
 		Renderer[] componentsInChildren = hookContainer.GetComponentsInChildren<Renderer>();
 		foreach (Renderer renderer in componentsInChildren)
 		{
 			if (renderer.GetType() != typeof(SkinnedMeshRenderer) && renderer.GetType() != typeof(MeshRenderer))
-			{
 				continue;
-			}
-			for (int j = 0; j < renderer.materials.Length; j++)
+			Material[] mats = renderer.materials;
+			for (int j = 0; j < mats.Length; j++)
 			{
-				if (renderer.materials[j].HasProperty("_Color"))
+				if (mats[j].HasProperty("_Color"))
 				{
 					if (hookAlpha == 0f)
 					{
@@ -421,7 +415,8 @@ public class GrapplingHook : MonoBehaviour
 						continue;
 					}
 					renderer.enabled = true;
-					renderer.materials[j].color = new Color(renderer.materials[j].color.r, renderer.materials[j].color.g, renderer.materials[j].color.b, hookAlpha);
+					Color c = mats[j].color;
+					mats[j].color = new Color(c.r, c.g, c.b, hookAlpha);
 				}
 			}
 		}

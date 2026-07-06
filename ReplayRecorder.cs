@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using UnityEngine;
 
 public class ReplayRecorder : Singleton<ReplayRecorder>
@@ -96,136 +97,103 @@ public class ReplayRecorder : Singleton<ReplayRecorder>
 
 	public void SaveReplayToString()
 	{
-		replayString = string.Empty;
-		replayString = replayString + replay.Count + "\n";
-		replayString = replayString + Singleton<ReplayManager>.SP.replayVersion + "\n";
-		replayString = replayString + Singleton<CheckpointManager>.SP.GetFinishTime().ToString(CultureInfo.InvariantCulture) + "\n";
+		StringBuilder sb = new StringBuilder();
+		sb.Append(replay.Count).Append('\n');
+		sb.Append(Singleton<ReplayManager>.SP.replayVersion).Append('\n');
+		sb.Append(Singleton<CheckpointManager>.SP.GetFinishTime().ToString(CultureInfo.InvariantCulture)).Append('\n');
 		CharacterSelect.Characters replayCharacter = Singleton<CharacterSelect>.SP.GetSelectedCharacter();
 		int replaySkin = ReplaySkinRemap.RemapSkin(replayCharacter, Singleton<CharacterSelect>.SP.GetSelectedSkin());
-		replayString = replayString + (int)replayCharacter + "\n";
-		replayString = replayString + replaySkin + "\n";
-		replayString = replayString + snapshotRate + "\n";
-		replayString += "cpdata\n";
+		sb.Append((int)replayCharacter).Append('\n');
+		sb.Append(replaySkin).Append('\n');
+		sb.Append(snapshotRate).Append('\n');
+		sb.Append("cpdata\n");
 		foreach (float checkpointTime in waypointManager.GetCheckpointTimes())
-		{
-			replayString = replayString + checkpointTime.ToString(CultureInfo.InvariantCulture) + "\n";
-		}
-		replayString += "walk\n";
+			sb.Append(checkpointTime.ToString(CultureInfo.InvariantCulture)).Append('\n');
+		sb.Append("walk\n");
 		float num = 0f;
 		for (int i = 0; i < replay.Count; i++)
 		{
-			if (i == 0)
+			if (i == 0 || replay[i].walkInput != num)
 			{
-				string text = replayString;
-				replayString = text + i + "," + replay[i].walkInput.ToString(CultureInfo.InvariantCulture) + "\n";
-				num = replay[i].walkInput;
-			}
-			else if (replay[i].walkInput != num)
-			{
-				string text2 = replayString;
-				replayString = text2 + i + "," + replay[i].walkInput.ToString(CultureInfo.InvariantCulture) + "\n";
+				sb.Append(i).Append(',').Append(replay[i].walkInput.ToString(CultureInfo.InvariantCulture)).Append('\n');
 				num = replay[i].walkInput;
 			}
 		}
-		replayString += "vert\n";
+		sb.Append("vert\n");
 		num = 0f;
 		for (int j = 0; j < replay.Count; j++)
 		{
-			if (j == 0)
+			if (j == 0 || replay[j].verticalInput != num)
 			{
-				string text3 = replayString;
-				replayString = text3 + j + "," + replay[j].verticalInput.ToString(CultureInfo.InvariantCulture) + "\n";
-				num = replay[j].verticalInput;
-			}
-			else if (replay[j].verticalInput != num)
-			{
-				string text4 = replayString;
-				replayString = text4 + j + "," + replay[j].verticalInput.ToString(CultureInfo.InvariantCulture) + "\n";
+				sb.Append(j).Append(',').Append(replay[j].verticalInput.ToString(CultureInfo.InvariantCulture)).Append('\n');
 				num = replay[j].verticalInput;
 			}
 		}
-		replayString += "abil\n";
+		sb.Append("abil\n");
 		bool flag = false;
 		for (int k = 0; k < replay.Count; k++)
 		{
-			string text5 = ((!replay[k].abilityInput) ? "0" : "1");
-			if (k == 0)
+			if (k == 0 || replay[k].abilityInput != flag)
 			{
-				string text6 = replayString;
-				replayString = text6 + k + "," + text5 + "\n";
-				flag = replay[k].abilityInput;
-			}
-			else if (replay[k].abilityInput != flag)
-			{
-				string text7 = replayString;
-				replayString = text7 + k + "," + text5 + "\n";
+				sb.Append(k).Append(',').Append(replay[k].abilityInput ? '1' : '0').Append('\n');
 				flag = replay[k].abilityInput;
 			}
 		}
-		replayString += "jump\n";
+		sb.Append("jump\n");
 		flag = false;
 		for (int l = 0; l < replay.Count; l++)
 		{
-			string text8 = ((!replay[l].jumpInput) ? "0" : "1");
-			if (l == 0)
+			if (l == 0 || replay[l].jumpInput != flag)
 			{
-				string text9 = replayString;
-				replayString = text9 + l + "," + text8 + "\n";
-				flag = replay[l].jumpInput;
-			}
-			else if (replay[l].jumpInput != flag)
-			{
-				string text10 = replayString;
-				replayString = text10 + l + "," + text8 + "\n";
+				sb.Append(l).Append(',').Append(replay[l].jumpInput ? '1' : '0').Append('\n');
 				flag = replay[l].jumpInput;
 			}
 		}
-		replayString += "slide\n";
+		sb.Append("slide\n");
 		flag = false;
 		for (int m = 0; m < replay.Count; m++)
 		{
-			string text11 = ((!replay[m].slideInput) ? "0" : "1");
-			if (m == 0)
+			if (m == 0 || replay[m].slideInput != flag)
 			{
-				string text12 = replayString;
-				replayString = text12 + m + "," + text11 + "\n";
-				flag = replay[m].slideInput;
-			}
-			else if (replay[m].slideInput != flag)
-			{
-				string text13 = replayString;
-				replayString = text13 + m + "," + text11 + "\n";
+				sb.Append(m).Append(',').Append(replay[m].slideInput ? '1' : '0').Append('\n');
 				flag = replay[m].slideInput;
 			}
 		}
-		replayString += "reset\n";
+		sb.Append("reset\n");
 		flag = false;
 		for (int n = 0; n < replay.Count; n++)
 		{
-			string text14 = ((!replay[n].resetToLastCheckpoint) ? "0" : "1");
-			if (n == 0)
+			if (n == 0 || replay[n].resetToLastCheckpoint != flag)
 			{
-				string text15 = replayString;
-				replayString = text15 + n + "," + text14 + "\n";
-				flag = replay[n].resetToLastCheckpoint;
-			}
-			else if (replay[n].resetToLastCheckpoint != flag)
-			{
-				string text16 = replayString;
-				replayString = text16 + n + "," + text14 + "\n";
+				sb.Append(n).Append(',').Append(replay[n].resetToLastCheckpoint ? '1' : '0').Append('\n');
 				flag = replay[n].resetToLastCheckpoint;
 			}
 		}
-		replayString += "snaps\n";
+		sb.Append("snaps\n");
 		for (int num2 = 0; num2 < snapshots.Count; num2++)
 		{
 			SnapshotFrame snapshotFrame = snapshots[num2];
-			string text17 = snapshotFrame.position.x.ToString(CultureInfo.InvariantCulture) + "," + snapshotFrame.position.y.ToString(CultureInfo.InvariantCulture) + "," + snapshotFrame.position.z.ToString(CultureInfo.InvariantCulture) + ",";
-			string text18 = text17;
-			text17 = text18 + snapshotFrame.velocity.x.ToString(CultureInfo.InvariantCulture) + "," + snapshotFrame.velocity.y.ToString(CultureInfo.InvariantCulture) + "," + snapshotFrame.velocity.z.ToString(CultureInfo.InvariantCulture) + ",";
-			text17 = text17 + snapshotFrame.waypoint + "\n";
-			replayString += text17;
+			sb.Append(snapshotFrame.position.x.ToString(CultureInfo.InvariantCulture)).Append(',')
+			  .Append(snapshotFrame.position.y.ToString(CultureInfo.InvariantCulture)).Append(',')
+			  .Append(snapshotFrame.position.z.ToString(CultureInfo.InvariantCulture)).Append(',')
+			  .Append(snapshotFrame.velocity.x.ToString(CultureInfo.InvariantCulture)).Append(',')
+			  .Append(snapshotFrame.velocity.y.ToString(CultureInfo.InvariantCulture)).Append(',')
+			  .Append(snapshotFrame.velocity.z.ToString(CultureInfo.InvariantCulture)).Append(',')
+			  .Append(snapshotFrame.waypoint).Append('\n');
 		}
+		// Append coin split data for bonus levels — placed after snaps so vanilla clients ignore it
+		if (Singleton<LevelBatchManager>.SP.GetCurrentLevelObj() != null &&
+			Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelType == LevelType.Bonus)
+		{
+			Dictionary<int, float> coinTimes = Singleton<BonusSplitManager>.SP.GetPBCoinTimesForReplay();
+			if (coinTimes.Count > 0)
+			{
+				sb.Append("coindata\n");
+				foreach (KeyValuePair<int, float> kvp in coinTimes)
+					sb.Append(kvp.Key).Append(',').Append(kvp.Value.ToString(CultureInfo.InvariantCulture)).Append('\n');
+			}
+		}
+		replayString = sb.ToString();
 	}
 
 	public void SaveReplayLocal(SaveReplayType replayType = SaveReplayType.PersonalBest)

@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class RaycastCollider : MonoBehaviour
 {
+	private PlatformerPhysics platformerPhysics;
+
 	public float radius = 1f;
 
 	public Vector3 velocity = Vector3.zero;
@@ -28,6 +30,7 @@ public class RaycastCollider : MonoBehaviour
 	private void Start()
 	{
 		lastNormal = Vector3.up;
+		platformerPhysics = GetComponent<PlatformerPhysics>();
 	}
 
 	public void AddVelocity(Vector3 vel)
@@ -38,7 +41,7 @@ public class RaycastCollider : MonoBehaviour
 	public void FixedUpdate()
 	{
 		IterativeCollisionCheck(0);
-		if (!GetComponent<PlatformerPhysics>().onGround)
+		if (!platformerPhysics.onGround)
 		{
 			Move(velocity * Time.fixedDeltaTime);
 		}
@@ -73,45 +76,31 @@ public class RaycastCollider : MonoBehaviour
 				vector = hitInfo.normal;
 				num4 = hitInfo.distance - num2 - num;
 				vector2 = hitInfo.point - num4 * normalized;
-				if (drawRays)
-				{
-					Debug.DrawLine(vector2, hitInfo.point);
-				}
 			}
 			if (magnitude > num4 && num3 < 5)
 			{
-				if (Mathf.Abs(vector.y) < 0.05f)
-				{
-					vector.y = 0f;
-					vector.Normalize();
-				}
-				Vector3 vector3 = vector;
-				Vector3 vector4 = Vector3.up;
-				Vector3 vector5 = Vector3.up;
-				Vector3 vector6 = hitInfo.point - base.transform.position;
-				Vector3 normalized2 = Vector3.Cross(vector6, base.transform.forward).normalized;
-				if (Physics.Raycast(base.transform.position, vector6 + normalized2 * 0.05f, out var hitInfo2, 1000f, layerMask))
-				{
-					vector4 = hitInfo2.normal;
-				}
-				if (Physics.Raycast(base.transform.position, vector6 - normalized2 * 0.05f, out hitInfo2, 1000f, layerMask))
-				{
-					vector5 = hitInfo2.normal;
-				}
+			if (Mathf.Abs(vector.y) < 0.05f)
+			{
+			vector.y = 0f;
+			vector.Normalize();
+			}
+			Vector3 vector3 = vector;
+			Vector3 vector4 = Vector3.up;
+			Vector3 vector5 = Vector3.up;
+			Vector3 vector6 = hitInfo.point - base.transform.position;
+			Vector3 normalized2 = Vector3.Cross(vector6, base.transform.forward).normalized;
+			if (Physics.Raycast(base.transform.position, vector6 + normalized2 * 0.05f, out var hitInfo2, 1000f, layerMask))
+			{
+			vector4 = hitInfo2.normal;
+			}
+			if (Physics.Raycast(base.transform.position, vector6 - normalized2 * 0.05f, out hitInfo2, 1000f, layerMask))
+			{
+			vector5 = hitInfo2.normal;
+			}
 				float num5 = Vector3.Angle(vector4, vector5);
 				if (num5 > 45f && num5 < 120f && velocity.magnitude > 10f)
 				{
 					vector = ((!(Vector3.Angle(vector, vector4) < Vector3.Angle(vector, vector5))) ? vector5 : vector4);
-				}
-				if (drawRays && vector != vector3)
-				{
-					Debug.DrawRay(base.transform.position, vector3 * 1.1f, Color.magenta, 2f);
-					Debug.DrawRay(base.transform.position, vector * 1.05f, Color.yellow, 2f);
-					Debug.DrawRay(base.transform.position, vector4, Color.red, 2f);
-					Debug.DrawRay(base.transform.position, vector5, Color.green, 2f);
-					Debug.DrawLine(base.transform.position, hitInfo.point);
-					Debug.DrawRay(base.transform.position, vector6 + normalized2 * 0.05f, Color.cyan, 2f);
-					Debug.DrawRay(base.transform.position, vector6 - normalized2 * 0.05f, Color.cyan, 2f);
 				}
 				float num6 = num4 / magnitude;
 				Vector3 vector7 = motion * num6;
@@ -135,7 +124,7 @@ public class RaycastCollider : MonoBehaviour
 				raycastCollisionInfo.isConcave = isConcave;
 				if (!Application.isPlaying)
 				{
-					GetComponent<PlatformerPhysics>().HasCollision(raycastCollisionInfo);
+					platformerPhysics.HasCollision(raycastCollisionInfo);
 				}
 				else
 				{
@@ -165,19 +154,11 @@ public class RaycastCollider : MonoBehaviour
 		for (int i = 0; i < array.Length; i++)
 		{
 			Vector3 vector2 = array[i] - position;
-			if (drawRays)
-			{
-				Debug.DrawRay(position, vector2, Color.white);
-			}
 			if (Physics.Raycast(position, vector2, out var hitInfo, vector2.magnitude, layerMask))
 			{
 				Vector3 normal = hitInfo.normal;
 				normal -= Vector3.Dot(normal, base.transform.forward) * base.transform.forward;
 				normal.Normalize();
-				if (drawRays)
-				{
-					Debug.DrawRay(position, vector2, Color.red, 5f);
-				}
 				Vector3 vector3 = Vector3.Dot(vector2 - vector2.normalized * hitInfo.distance, normal) * -normal;
 				if (vector3.magnitude > vector.magnitude)
 				{
@@ -235,10 +216,6 @@ public class RaycastCollider : MonoBehaviour
 				}
 				jumpTimeLeft -= num4;
 				Vector3 vector6 = vector4 + vector5 * num4;
-				if (drawRays)
-				{
-					Debug.DrawLine(vector4, vector6, Color.red);
-				}
 				vector4 = vector6;
 				if (gameSpline != null)
 				{
@@ -251,26 +228,14 @@ public class RaycastCollider : MonoBehaviour
 						Vector3 edge3D3 = gameSpline.GetEdge3D(num3 - 1);
 						vector = edge3D2;
 						vector5 = vector5.y * Vector3.up + Vector3.Dot(vector5, edge3D3) * edge3D2;
-						if (drawRays)
-						{
-							Debug.DrawRay(vector4, edge3D2, Color.green);
-						}
 					}
 				}
 				num += num4;
 			}
 			Vector3 vector7 = vector4 - vector2;
 			Ray ray = new Ray(vector2, vector7);
-			if (drawRays)
-			{
-				Debug.DrawRay(vector2, vector7 * 0.9f, Color.yellow);
-			}
 			if (Physics.Raycast(ray, out var hitInfo, vector7.magnitude) && !hitInfo.collider.isTrigger)
 			{
-				if (drawRays)
-				{
-					Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.green);
-				}
 				predictedNormal = hitInfo.normal;
 				predictedPosition = hitInfo.point;
 				predictedTimeLeft = num;

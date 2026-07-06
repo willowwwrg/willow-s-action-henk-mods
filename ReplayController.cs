@@ -16,7 +16,8 @@ public class ReplayController : MonoBehaviour
 		jump,
 		slide,
 		reset,
-		snapshots
+		snapshots,
+		coindata
 	}
 
 	public const bool correctToSnapshotsPrinting = false;
@@ -92,6 +93,7 @@ public class ReplayController : MonoBehaviour
 		Dictionary<int, bool> dictionary4 = new Dictionary<int, bool>();
 		Dictionary<int, bool> dictionary5 = new Dictionary<int, bool>();
 		Dictionary<int, bool> dictionary6 = new Dictionary<int, bool>();
+		Dictionary<int, float> coinData = new Dictionary<int, float>();
 		snapshots.Clear();
 		List<float> list = new List<float>();
 		finishTime = 0f;
@@ -216,12 +218,24 @@ public class ReplayController : MonoBehaviour
 				}
 				case ReplayReadState.snapshots:
 				{
+					if (intString == "coindata")
+					{
+						readState = ReplayReadState.coindata;
+						break;
+					}
 					string[] array = intString.Split(',');
 					SnapshotFrame snapshotFrame = new SnapshotFrame();
 					snapshotFrame.position = new Vector3(HenkUtils.FloatParse(array[0]), HenkUtils.FloatParse(array[1]), HenkUtils.FloatParse(array[2]));
 					snapshotFrame.velocity = new Vector3(HenkUtils.FloatParse(array[3]), HenkUtils.FloatParse(array[4]), HenkUtils.FloatParse(array[5]));
 					snapshotFrame.waypoint = HenkUtils.IntParse(array[6]);
 					snapshots.Add(snapshotFrame);
+					break;
+				}
+				case ReplayReadState.coindata:
+				{
+					string[] parts = intString.Split(',');
+					if (parts.Length == 2)
+						coinData[HenkUtils.IntParse(parts[0])] = HenkUtils.FloatParse(parts[1]);
 					break;
 				}
 				default:
@@ -231,6 +245,7 @@ public class ReplayController : MonoBehaviour
 			}
 			while (intString != null && intString != string.Empty);
 			replay.Clear();
+			replay.Capacity = num;
 			ReplayFrame replayFrame = new ReplayFrame();
 			replayFrame.frameNumber = 0;
 			replayFrame.walkInput = 0f;
@@ -243,41 +258,33 @@ public class ReplayController : MonoBehaviour
 			{
 				replayFrame.frameNumber = i;
 				if (dictionary.ContainsKey(i))
-				{
 					replayFrame.walkInput = dictionary[i];
-				}
 				if (dictionary2.ContainsKey(i))
-				{
 					replayFrame.verticalInput = dictionary2[i];
-				}
 				if (dictionary3.ContainsKey(i))
-				{
 					replayFrame.abilityInput = dictionary3[i];
-				}
 				if (dictionary4.ContainsKey(i))
-				{
 					replayFrame.jumpInput = dictionary4[i];
-				}
 				if (dictionary5.ContainsKey(i))
-				{
 					replayFrame.slideInput = dictionary5[i];
-				}
 				if (dictionary6.ContainsKey(i))
-				{
 					replayFrame.resetToLastCheckpoint = dictionary6[i];
-				}
-				ReplayFrame replayFrame2 = new ReplayFrame();
-				replayFrame2.frameNumber = replayFrame.frameNumber;
-				replayFrame2.walkInput = replayFrame.walkInput;
-				replayFrame2.verticalInput = replayFrame.verticalInput;
-				replayFrame2.abilityInput = replayFrame.abilityInput;
-				replayFrame2.jumpInput = replayFrame.jumpInput;
-				replayFrame2.slideInput = replayFrame.slideInput;
-				replayFrame2.resetToLastCheckpoint = replayFrame.resetToLastCheckpoint;
-				replay.Add(replayFrame2);
+				replay.Add(new ReplayFrame
+				{
+					frameNumber = replayFrame.frameNumber,
+					walkInput = replayFrame.walkInput,
+					verticalInput = replayFrame.verticalInput,
+					abilityInput = replayFrame.abilityInput,
+					jumpInput = replayFrame.jumpInput,
+					slideInput = replayFrame.slideInput,
+					resetToLastCheckpoint = replayFrame.resetToLastCheckpoint
+				});
 			}
 		}
 		Singleton<CheckpointManager>.SP.SetOpponentTimes(list, finishTime);
+		// Feed embedded coin times into BonusSplitManager if present
+		if (coinData.Count > 0)
+			Singleton<BonusSplitManager>.SP.LoadGhostCoinTimes(coinData);
 		GetComponent<PlayerGraphics>().SetGhostSkin(medalReplay, replayCharacter, replaySkin);
 		UnityEngine.Object.FindObjectOfType<State_ReplayMode>().SetReplayController(this);
 		return true;
@@ -455,12 +462,13 @@ public class ReplayController : MonoBehaviour
 		{
 			return;
 		}
-		player.input.walkInput = replay[currentReplayFrame].walkInput;
-		player.input.verticalInput = replay[currentReplayFrame].verticalInput;
-		player.input.abilityInput = replay[currentReplayFrame].abilityInput;
-		player.input.jumpInput = replay[currentReplayFrame].jumpInput;
-		player.input.slideInput = replay[currentReplayFrame].slideInput;
-		if (replay[currentReplayFrame].resetToLastCheckpoint)
+		ReplayFrame frame = replay[currentReplayFrame];
+		player.input.walkInput = frame.walkInput;
+		player.input.verticalInput = frame.verticalInput;
+		player.input.abilityInput = frame.abilityInput;
+		player.input.jumpInput = frame.jumpInput;
+		player.input.slideInput = frame.slideInput;
+		if (frame.resetToLastCheckpoint)
 		{
 			Singleton<PlayerManager>.SP.ResetPlayer(base.gameObject, hard: false);
 		}

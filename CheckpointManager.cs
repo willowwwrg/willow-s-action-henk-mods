@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class CheckpointManager : Singleton<CheckpointManager>
 {
+	private Checkpoint[] cachedAllCheckpoints;
+
 	public Checkpoint[] Checkpoints;
 
 	public Checkpoint Startline;
@@ -42,7 +44,20 @@ public class CheckpointManager : Singleton<CheckpointManager>
 			{
 				Finishline.SetNumber(Checkpoints.Length + 1);
 			}
+			RebuildCheckpointCache();
 		}
+	}
+
+	private void RebuildCheckpointCache()
+	{
+		List<Checkpoint> list = new List<Checkpoint>();
+		list.Add(Startline);
+		list.AddRange(Checkpoints);
+		if ((bool)Finishline)
+		{
+			list.Add(Finishline);
+		}
+		cachedAllCheckpoints = list.ToArray();
 	}
 
 	private void Update()
@@ -253,14 +268,9 @@ public class CheckpointManager : Singleton<CheckpointManager>
 
 	public Checkpoint[] GetAllCheckpoints()
 	{
-		List<Checkpoint> list = new List<Checkpoint>();
-		list.Add(Startline);
-		list.AddRange(Checkpoints);
-		if ((bool)Finishline)
-		{
-			list.Add(Finishline);
-		}
-		return list.ToArray();
+		if (cachedAllCheckpoints == null)
+			RebuildCheckpointCache();
+		return cachedAllCheckpoints;
 	}
 
 	public bool HasOpponentCheckpointTimes()

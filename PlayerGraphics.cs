@@ -37,6 +37,10 @@ public class PlayerGraphics : MonoBehaviour
 
 	private PlatformerPhysics physics;
 
+	private GrapplingHook grapplingHook;
+
+	private CharacterModel cachedCharacterModel;
+
 	private float tiltRotation;
 
 	private float yRotation;
@@ -84,6 +88,7 @@ public class PlayerGraphics : MonoBehaviour
 		physics = GetComponent<PlatformerPhysics>();
 		playerCollider = GetComponent<RaycastCollider>();
 		controller = GetComponent<PlatformerController>();
+		grapplingHook = GetComponent<GrapplingHook>();
 		ghostInitialized = false;
 		taunting = false;
 	}
@@ -222,6 +227,7 @@ public class PlayerGraphics : MonoBehaviour
 			SetRotatorTargetLocalPos(new Vector3(0f, 0f, 2f));
 		}
 		animator = animatedModel.GetComponent<Animator>();
+		cachedCharacterModel = animatedModel.GetComponent<CharacterModel>();
 		if (hasGhostGraphics)
 		{
 			ghostInitialized = true;
@@ -448,9 +454,11 @@ public class PlayerGraphics : MonoBehaviour
 			{
 				continue;
 			}
-			for (int j = 0; j < renderer.materials.Length; j++)
+			Material[] mats = renderer.materials;
+			MaterialBaseValues mbv = renderer.GetComponent<MaterialBaseValues>();
+			for (int j = 0; j < mats.Length; j++)
 			{
-				if (renderer.materials[j].HasProperty("_Color"))
+				if (mats[j].HasProperty("_Color"))
 				{
 					if (num == 0f)
 					{
@@ -459,27 +467,26 @@ public class PlayerGraphics : MonoBehaviour
 					else
 					{
 						renderer.enabled = true;
-						renderer.materials[j].color = new Color(renderer.materials[j].color.r, renderer.materials[j].color.g, renderer.materials[j].color.b, num);
+						Color c = mats[j].color;
+						mats[j].color = new Color(c.r, c.g, c.b, num);
 					}
 				}
-				MaterialBaseValues component = renderer.GetComponent<MaterialBaseValues>();
-				if ((bool)component && component.baseValues != null && component.baseValues[j] != null)
+				if ((bool)mbv && mbv.baseValues != null && mbv.baseValues[j] != null)
 				{
-					if (component.baseValues[j].specInt != 0f && renderer.materials[j].HasProperty("_SpecInt"))
+					if (mbv.baseValues[j].specInt != 0f && mats[j].HasProperty("_SpecInt"))
 					{
-						renderer.materials[j].SetFloat("_SpecInt", component.baseValues[j].specInt * num);
+						mats[j].SetFloat("_SpecInt", mbv.baseValues[j].specInt * num);
 					}
-					if (component.baseValues[j].glowStrength != 0f && renderer.materials[j].HasProperty("_GlowStrength"))
+					if (mbv.baseValues[j].glowStrength != 0f && mats[j].HasProperty("_GlowStrength"))
 					{
-						renderer.materials[j].SetFloat("_GlowStrength", component.baseValues[j].glowStrength * num);
+						mats[j].SetFloat("_GlowStrength", mbv.baseValues[j].glowStrength * num);
 					}
 				}
 			}
 		}
-		GrapplingHook component2 = GetComponent<GrapplingHook>();
-		if ((bool)component2 && component2.enabled)
+		if ((bool)grapplingHook && grapplingHook.enabled)
 		{
-			component2.SetHookAlpha(num);
+			grapplingHook.SetHookAlpha(num);
 		}
 	}
 
@@ -533,18 +540,12 @@ public class PlayerGraphics : MonoBehaviour
 		animator.SetBool("Jump", physics.IsInAJump());
 		bool flag2 = physics.IsOnWall() && !physics.hasWallGrip && physics.onGround;
 		animator.SetBool("OnWall", flag2);
-		GrapplingHook component = GetComponent<GrapplingHook>();
-		bool flag3 = (bool)component && component.IsEnabled();
-		PogoStick component2 = GetComponent<PogoStick>();
-		if ((bool)component2)
-		{
-			component2.IsEnabled();
-		}
+		bool flag3 = (bool)grapplingHook && grapplingHook.IsEnabled();
 		animator.SetBool("GrapplingHook", flag3);
 		animator.SetBool("Sliding", physics.sliding && !flag3);
 		if (flag3)
 		{
-			float num = Vector3.Dot(playerCollider.velocity, component.GetSideDir());
+			float num = Vector3.Dot(playerCollider.velocity, grapplingHook.GetSideDir());
 			if (targetDirection < 0f)
 			{
 				num = 0f - num;
@@ -553,24 +554,24 @@ public class PlayerGraphics : MonoBehaviour
 		}
 		if (directionIndicator != null)
 		{
-			bool flag4 = GetComponent<PlatformerController>().localPlayerNumber != -1;
+			bool flag4 = controller.localPlayerNumber != -1;
 			MeshRenderer componentInChildren = directionIndicator.GetComponentInChildren<MeshRenderer>();
 			Color color = componentInChildren.material.GetColor("_TintColor");
 			Color color2 = Color.green;
 			if (flag4)
 			{
-				color2 = NGUIText.ParseColor24(Singleton<LocalMultiManager>.SP.playerBrightColorCodes[GetComponent<PlatformerController>().localPlayerNumber], 1);
+				color2 = NGUIText.ParseColor24(Singleton<LocalMultiManager>.SP.playerBrightColorCodes[controller.localPlayerNumber], 1);
 			}
 			color2.a = 0f;
 			if (hitInfoIndicator != null)
 			{
 				hitInfoIndicator.renderer.enabled = false;
 			}
-			if (component.enabled && !component.IsEnabled() && controller.HasControl())
+			if (grapplingHook != null && grapplingHook.enabled && !grapplingHook.IsEnabled() && controller.HasControl())
 			{
-				directionIndicator.transform.LookAt(physicsInterpolator.position + component.GetShootDir());
+				directionIndicator.transform.LookAt(physicsInterpolator.position + grapplingHook.GetShootDir());
 				componentInChildren.enabled = true;
-				Vector3 vector = component.CheckTarget(physicsInterpolator.position);
+				Vector3 vector = grapplingHook.CheckTarget(physicsInterpolator.position);
 				if (vector == Vector3.zero)
 				{
 					if (!flag4)
@@ -595,12 +596,12 @@ public class PlayerGraphics : MonoBehaviour
 		float z = 0f;
 		if (flag2 && !physics.sliding)
 		{
-			z = animatedModel.GetComponent<CharacterModel>().onWallZOffset;
+			z = cachedCharacterModel.onWallZOffset;
 		}
-		float num2 = animatedModel.GetComponent<CharacterModel>().modelYOffset;
+		float num2 = cachedCharacterModel.modelYOffset;
 		if (!flag && !physics.sliding)
 		{
-			num2 += animatedModel.GetComponent<CharacterModel>().extraOffsetForJump;
+			num2 += cachedCharacterModel.extraOffsetForJump;
 		}
 		Transform transform = animatedModel.transform;
 		transform.localPosition = Vector3.Lerp(transform.localPosition, new Vector3(transform.localPosition.x, num2, z), 10f * Time.deltaTime);
@@ -667,8 +668,7 @@ public class PlayerGraphics : MonoBehaviour
 	private void ApplyRotation()
 	{
 		Vector3 vector = physics.groundNormal;
-		GrapplingHook component = GetComponent<GrapplingHook>();
-		bool flag = (bool)component && component.IsEnabled();
+		bool flag = (bool)grapplingHook && grapplingHook.IsEnabled();
 		if (!physics.onGround && !flag)
 		{
 			if (!(Mathf.Abs(Vector3.Dot(playerCollider.velocity, physics.GetRightFlat())) > 0.001f))
@@ -699,14 +699,14 @@ public class PlayerGraphics : MonoBehaviour
 			}
 			if (flag)
 			{
-				vector = component.GetHookDir();
+				vector = grapplingHook.GetHookDir();
 			}
 			float num5 = Vector3.Angle(vector, GetUp());
 			float num6 = RotationSign(vector);
 			float num7 = 0f;
 			if ((bool)animatedModel)
 			{
-				num7 = animatedModel.GetComponent<CharacterModel>().groundRotationSpeed;
+				num7 = cachedCharacterModel.groundRotationSpeed;
 			}
 			tiltRotation += num5 * num6 * num7 * Time.deltaTime;
 			rotationSpeed = 0f;
@@ -717,8 +717,7 @@ public class PlayerGraphics : MonoBehaviour
 	{
 		if ((ghostInitialized || !hasGhostGraphics) && (bool)animatedModel)
 		{
-			float rotationOffset = animatedModel.GetComponent<CharacterModel>().rotationOffset;
-			animatedModel.transform.localRotation = Quaternion.Euler(0f, rotationOffset, 0f);
+			animatedModel.transform.localRotation = Quaternion.Euler(0f, cachedCharacterModel.rotationOffset, 0f);
 		}
 	}
 
@@ -736,9 +735,9 @@ public class PlayerGraphics : MonoBehaviour
 		{
 			animator.SetTrigger("Jump");
 			float num = 0f - Mathf.Sign(physics.GetGroundNormalX());
-			bool flag = !animatedModel.GetComponent<CharacterModel>().noFastRunningFlips;
-			float flipSpeed = animatedModel.GetComponent<CharacterModel>().flipSpeed;
-			float velocityBeforeFlip = animatedModel.GetComponent<CharacterModel>().velocityBeforeFlip;
+			bool flag = !cachedCharacterModel.noFastRunningFlips;
+			float flipSpeed = cachedCharacterModel.flipSpeed;
+			float velocityBeforeFlip = cachedCharacterModel.velocityBeforeFlip;
 			if (physics.IsOnWall())
 			{
 				rotationSpeed += 1300f * num;

@@ -57,6 +57,21 @@ public class DevCommands : MonoBehaviour
 		{ "_GeneratedPerformanceGroups", "Background" }
 	};
 
+	private static readonly string[] splitModeLabels = new string[] { "Off", "Every coin", "Every 2 coins", "Every 3 coins", "Every 4 coins", "Every 5 coins" };
+
+	private const string FullGameModeKey = "FullGameMode";
+
+	public static bool IsFullGameMode()
+	{
+		return PlayerPrefs.GetInt(FullGameModeKey, 0) == 1;
+	}
+
+	private void ToggleFullGameMode()
+	{
+		PlayerPrefs.SetInt(FullGameModeKey, IsFullGameMode() ? 0 : 1);
+		PlayerPrefs.Save();
+	}
+
 	private void ToggleSkybox()
 	{
 		skyboxEnabled = !skyboxEnabled;
@@ -101,6 +116,7 @@ public class DevCommands : MonoBehaviour
 
 	private void LevelFileLoaded()
 	{
+		System.GC.Collect();
 		skyboxEnabled = true;
 		originalSkybox = RenderSettings.skybox;
 		StartCoroutine(GeneratePerformanceGroupsDelayed());
@@ -108,7 +124,7 @@ public class DevCommands : MonoBehaviour
 
 	private IEnumerator GeneratePerformanceGroupsDelayed()
 	{
-		yield return new WaitForSeconds(0.5f);
+		yield return new WaitForSeconds(2f);
 		PerformanceGroups existing = Object.FindObjectOfType<PerformanceGroups>();
 		if (existing != null && existing.gameObject.name == "_GeneratedPerformanceGroups")
 		{
@@ -132,20 +148,21 @@ public class DevCommands : MonoBehaviour
 				continue;
 			}
 			Renderer[] componentsInChildren = gameObject2.GetComponentsInChildren<Renderer>();
-			if (componentsInChildren.Length != 0)
+			if (componentsInChildren.Length == 0)
 			{
-				if (!friendlyNames.TryGetValue(text, out var value))
-				{
-					value = text;
-				}
-				PerformanceGroup performanceGroup = new PerformanceGroup();
-				performanceGroup.name = value;
-				performanceGroup.findByName = string.Empty;
-				performanceGroup.gameObjects = new GameObject[1] { gameObject2 };
-				performanceGroup.allRenderers = new List<Renderer>(componentsInChildren);
-				performanceGroup.enabled = true;
-				list.Add(performanceGroup);
+				continue;
 			}
+			if (!friendlyNames.TryGetValue(text, out var value))
+			{
+				value = text;
+			}
+			PerformanceGroup performanceGroup = new PerformanceGroup();
+			performanceGroup.name = value;
+			performanceGroup.findByName = string.Empty;
+			performanceGroup.gameObjects = new GameObject[1] { gameObject2 };
+			performanceGroup.allRenderers = new List<Renderer>(componentsInChildren);
+			performanceGroup.enabled = true;
+			list.Add(performanceGroup);
 		}
 		if (Singleton<Foreman>.SP.currentEnvironmentStyle == LevelStyle.Winter)
 		{
@@ -201,7 +218,6 @@ public class DevCommands : MonoBehaviour
 		text = text2 + "\nFPS/sec: " + (int)(1f / smoothDT) + "\nms/sec: " + (smoothDT * 1000f).ToString("N1");
 		text = ((smoothDT2 == 0f) ? (text + "\nWaiting for 10sec..") : (text + "\nms/10sec: " + (smoothDT2 * 1000f).ToString("N1")));
 		fpsLabel.text = text;
-		UpdateText();
 	}
 
 	private void UpdateText()
@@ -230,6 +246,10 @@ public class DevCommands : MonoBehaviour
 			}
 			text += "[007FFF]8.[-] Disable all particles\n";
 			text += "[007FFF]9.[-] Party Train!\n";
+			string splitColor = (Singleton<BonusSplitManager>.SP.SplitFrequency == 0) ? "[FF0000]" : "[00FF00]";
+			text += "[007FFF]Q.[-] Cycle bonus splits: " + splitColor + splitModeLabels[Singleton<BonusSplitManager>.SP.SplitFrequency] + "[-]\n";
+			string fgmColor = IsFullGameMode() ? "[00FF00]" : "[FF0000]";
+			text += "[007FFF]F.[-] Challenge and bonus ghosts: " + fgmColor + (IsFullGameMode() ? "On" : "Off") + "[-]\n";
 			label.text = text;
 			return;
 		}
@@ -290,6 +310,7 @@ public class DevCommands : MonoBehaviour
 					GeneratePerformanceGroups();
 					performanceGroups.inEditMode = true;
 				}
+				UpdateText();
 			}
 			if (Input.GetKeyDown(KeyCode.Alpha3))
 			{
@@ -305,7 +326,18 @@ public class DevCommands : MonoBehaviour
 			}
 			if (Input.GetKeyDown(KeyCode.Alpha6))
 			{
-				Singleton<PlayerManager>.SP.GetPlayer().GetComponent<PlayerGraphics>().NextSkin();
+				GameObject p = Singleton<PlayerManager>.SP.GetPlayer();
+				if (p != null) p.GetComponent<PlayerGraphics>().NextSkin();
+			}
+			if (Input.GetKeyDown(KeyCode.Q))
+			{
+				Singleton<BonusSplitManager>.SP.CycleSplitFrequency();
+				UpdateText();
+			}
+			if (Input.GetKeyDown(KeyCode.F))
+			{
+				ToggleFullGameMode();
+				UpdateText();
 			}
 			if (Input.GetKeyDown(KeyCode.Alpha7))
 			{
@@ -374,10 +406,24 @@ public class DevCommands : MonoBehaviour
 			{
 				performanceGroups.inEditMode = false;
 			}
+			UpdateText();
 		}
 		if (performanceMode && Input.GetKeyDown(KeyCode.BackQuote))
 		{
 			ToggleSkybox();
+			UpdateText();
+		}
+		if (performanceMode && performanceGroups != null)
+		{
+			for (int i = 0; i < performanceGroups.groups.Length; i++)
+			{
+				if (Input.GetKeyDown((KeyCode)(49 + i)))
+				{
+					performanceGroups.ToggleGroup(i);
+					UpdateText();
+					break;
+				}
+			}
 		}
 		if (Input.GetKeyDown(KeyCode.Tab))
 		{

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using Steamworks;
 using UnityEngine;
 
@@ -59,15 +58,9 @@ public class GUI_PreGame : GUI_Base
 
 	public GameObject arrows;
 
-	private static bool? _fullGameMode;
 	private static bool IsFullGameMode()
 	{
-		if (!_fullGameMode.HasValue)
-		{
-			string path = Path.Combine(Path.Combine(Application.dataPath, ".."), "fullgamemode.txt");
-			_fullGameMode = File.Exists(Path.GetFullPath(path));
-		}
-		return _fullGameMode.Value;
+		return DevCommands.IsFullGameMode();
 	}
 
 	private GhostSelectionState selectionState = GhostSelectionState.Main;
@@ -166,7 +159,15 @@ public class GUI_PreGame : GUI_Base
 		}
 		else if (!stateObject.countingDown)
 		{
-			SetGhostSelectionState(GhostSelectionState.Main);
+			if (Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelCode == 97)
+			{
+				if (IsFullGameMode())
+					Button_NoReplayChallengeOrBonus();
+				else
+					SetGhostSelectionState(GhostSelectionState.ChallengeOrBonusGhostSelect);
+			}
+			else
+				SetGhostSelectionState(GhostSelectionState.Main);
 			AudioController.Play("ButtonBackwards");
 		}
 	}
@@ -174,9 +175,16 @@ public class GUI_PreGame : GUI_Base
 	public void InitializeScreen()
 	{
 		initializingGhost = false;
-		if (Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelCode == 97)
+		if (Singleton<PlayerManager>.SP.ghostSet)
 		{
-			Button_NoReplay();
+			SetGhostSelectionState(GhostSelectionState.None);
+		}
+		else if (Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelCode == 97)
+		{
+			if (IsFullGameMode())
+				Button_NoReplayChallengeOrBonus();
+			else
+				SetGhostSelectionState(GhostSelectionState.ChallengeOrBonusGhostSelect);
 		}
 		else if (!Singleton<PlayerManager>.SP.ghostSet)
 		{

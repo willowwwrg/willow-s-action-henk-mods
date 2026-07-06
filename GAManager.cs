@@ -16,13 +16,7 @@ public class GAManager : Singleton<GAManager>
 
 	public void Update()
 	{
-		frameCount++;
-		totalMS += Time.deltaTime;
-		msCount++;
-		if (Time.time - lastUpdate > genericUpdateInterval && !Application.isEditor)
-		{
-			GenericUpdate();
-		}
+		// GameAnalytics server is no longer reachable, skip all GA calls
 	}
 
 	private void GenericUpdate()

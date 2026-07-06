@@ -11,6 +11,9 @@ public class PlayerManager : Singleton<PlayerManager>
 
 	private List<GameObject> networkPlayers = new List<GameObject>();
 
+	private GameObject[] cachedAllPlayers;
+	private bool allPlayersDirty = true;
+
 	[NonSerialized]
 	public GhostType ghostType;
 
@@ -21,11 +24,16 @@ public class PlayerManager : Singleton<PlayerManager>
 
 	public GameObject[] GetAllPlayers()
 	{
-		List<GameObject> list = new List<GameObject>();
-		list.AddRange(localPlayers);
-		list.AddRange(ghostPlayers);
-		list.AddRange(networkPlayers);
-		return list.ToArray();
+		if (allPlayersDirty)
+		{
+			List<GameObject> list = new List<GameObject>();
+			list.AddRange(localPlayers);
+			list.AddRange(ghostPlayers);
+			list.AddRange(networkPlayers);
+			cachedAllPlayers = list.ToArray();
+			allPlayersDirty = false;
+		}
+		return cachedAllPlayers;
 	}
 
 	public GameObject[] GetNetworkPlayers()
@@ -83,39 +91,38 @@ public class PlayerManager : Singleton<PlayerManager>
 			UnityEngine.Object.Destroy(ghostPlayer);
 		}
 		ghostPlayers.Clear();
+		allPlayersDirty = true;
 	}
 
 	public void AddNetworkPlayer(GameObject player)
 	{
 		networkPlayers.Add(player);
+		allPlayersDirty = true;
 	}
 
 	public void RemoveNetworkPlayer(GameObject player)
 	{
 		MonoBehaviour.print("removing network player");
 		networkPlayers.Remove(player);
+		allPlayersDirty = true;
 	}
 
 	public void RemoveNetworkPlayers()
 	{
 		networkPlayers.Clear();
+		allPlayersDirty = true;
 	}
 
 	public void RemovePlayer(GameObject player)
 	{
 		MonoBehaviour.print("removing " + player);
 		if (localPlayers.Contains(player))
-		{
 			localPlayers.Remove(player);
-		}
 		if (networkPlayers.Contains(player))
-		{
 			networkPlayers.Remove(player);
-		}
 		if (ghostPlayers.Contains(player))
-		{
 			ghostPlayers.Remove(player);
-		}
+		allPlayersDirty = true;
 	}
 
 	public void SpawnPlayer(bool multiPlayer = false, int localPlayerNumber = -1)
@@ -139,6 +146,7 @@ public class PlayerManager : Singleton<PlayerManager>
 		}
 		gameObject.name = "Player";
 		localPlayers.Add(gameObject);
+		allPlayersDirty = true;
 		PlacePlayerAtCheckpoint(Singleton<CheckpointManager>.SP.GetStartline(), gameObject);
 		ResetPlayer(gameObject, hard: true);
 		if (Singleton<LevelBatchManager>.SP.GetCurrentLevelCodeOrID() == 97)
@@ -160,6 +168,7 @@ public class PlayerManager : Singleton<PlayerManager>
 		}
 		GameObject gameObject = UnityEngine.Object.Instantiate(Resources.Load("Player")) as GameObject;
 		ghostPlayers.Add(gameObject);
+		allPlayersDirty = true;
 		gameObject.name = "Ghost";
 		if (ghostType != GhostType.Challenger)
 		{
@@ -179,6 +188,10 @@ public class PlayerManager : Singleton<PlayerManager>
 		gameObject.GetComponent<ReplayController>().LoadReplay(spawnGhostType, playerID);
 		PlacePlayerAtCheckpoint(Singleton<CheckpointManager>.SP.GetStartline(), gameObject);
 		ResetPlayer(gameObject, hard: true);
+		if (Singleton<LevelBatchManager>.SP.GetCurrentLevelCodeOrID() == 97)
+		{
+			gameObject.GetComponent<PlatformerPhysics>().jumping.gravity = 25f;
+		}
 		return gameObject;
 	}
 
@@ -267,13 +280,15 @@ public class PlayerManager : Singleton<PlayerManager>
 			Debug.LogError("Trying to place player.");
 			return;
 		}
-		player.GetComponent<PlayerGraphics>().ToggleParticles(toggle: false);
+		PlayerGraphics pg = player.GetComponent<PlayerGraphics>();
+		PlatformerController pc = player.GetComponent<PlatformerController>();
+		pg.ToggleParticles(toggle: false);
 		Vector3 direction = checkpoint.extraOffsetToSpawnPosition + extraOffset;
-		if (player.GetComponent<PlatformerController>().localPlayerNumber != -1)
+		if (pc.localPlayerNumber != -1)
 		{
 			if (checkpoint == Singleton<CheckpointManager>.SP.Startline)
 			{
-				int playerRank = Singleton<LocalMultiManager>.SP.GetPlayerRank(player.GetComponent<PlatformerController>().localPlayerNumber);
+				int playerRank = Singleton<LocalMultiManager>.SP.GetPlayerRank(pc.localPlayerNumber);
 				int num = Singleton<PlayerManager>.SP.GetAllPlayers().Length - playerRank - 1;
 				direction = checkpoint.LMPextraOffsetToSpawnPosition + checkpoint.LMPExtraOffsetPerPlayer * num;
 			}
@@ -291,9 +306,9 @@ public class PlayerManager : Singleton<PlayerManager>
 			component2.SetOffset(component.splineOffset.x + direction.x);
 			component2.RotateToWaypoint(snap: true);
 		}
-		player.GetComponent<PlayerGraphics>().SnapPhysicsInterpolator();
-		player.GetComponent<PlayerGraphics>().SetDirection(90f * Mathf.Sign(checkpoint.transform.localScale.x));
-		player.GetComponent<PlayerGraphics>().ToggleParticles(toggle: true);
+		pg.SnapPhysicsInterpolator();
+		pg.SetDirection(90f * Mathf.Sign(checkpoint.transform.localScale.x));
+		pg.ToggleParticles(toggle: true);
 		player.GetComponent<PlatformerPhysics>().UpdatePrediction();
 	}
 
@@ -308,7 +323,8 @@ public class PlayerManager : Singleton<PlayerManager>
 
 	public void ResetPlayer(GameObject player, bool hard)
 	{
-		if (player.GetComponent<PlatformerController>().localPlayerNumber != -1 && !Singleton<LocalMultiManager>.SP.IsPlayerAlive(player))
+		PlatformerController pc = player.GetComponent<PlatformerController>();
+		if (pc.localPlayerNumber != -1 && !Singleton<LocalMultiManager>.SP.IsPlayerAlive(player))
 		{
 			Singleton<LocalMultiManager>.SP.SetPlayerAlive(player);
 		}
@@ -330,9 +346,10 @@ public class PlayerManager : Singleton<PlayerManager>
 				}
 				return;
 			}
-			if ((bool)player.GetComponent<ReplayRecorder>())
+			ReplayRecorder rr = player.GetComponent<ReplayRecorder>();
+			if ((bool)rr)
 			{
-				player.GetComponent<ReplayRecorder>().insertResetFrame = true;
+				rr.insertResetFrame = true;
 			}
 		}
 		if (hard)

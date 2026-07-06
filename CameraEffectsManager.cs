@@ -238,7 +238,7 @@ public class CameraEffectsManager : MonoBehaviour
 				{
 					texture4 = materials2[i].GetTexture("_Illum");
 				}
-				materials2[i] = graphicsStyle.illuminationSettings.characterMaterialOverride;
+				materials2[i] = (Material)Object.Instantiate(graphicsStyle.illuminationSettings.characterMaterialOverride);
 				materials2[i].SetTexture("_MainTex", texture);
 				if (materials2[i].HasProperty("_SpecTex"))
 				{
@@ -263,10 +263,6 @@ public class CameraEffectsManager : MonoBehaviour
 				{
 					renderer.materials[i].SetFloat("_EmissionLM", graphicsStyle.illuminationSettings.blackOverride);
 				}
-			}
-			if (graphicsStyle.illuminationSettings.hueCycleMaterial != null)
-			{
-				MonoBehaviour.print("name: " + renderer.materials[i].name + "  huemat: " + graphicsStyle.illuminationSettings.hueCycleMaterial.name + " (Instance)");
 			}
 			if (graphicsStyle.illuminationSettings.hueCycleMaterial != null && renderer.materials[i].name.StartsWith(graphicsStyle.illuminationSettings.hueCycleMaterial.name))
 			{

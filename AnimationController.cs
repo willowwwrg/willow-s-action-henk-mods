@@ -47,26 +47,21 @@ public class AnimationController : MonoBehaviour
 	private void Update()
 	{
 		for (int i = 0; i < vortexPair0.Length; i++)
-		{
 			vortexPair0[i].strength = strengthVortexPair0;
-		}
 		for (int j = 0; j < vortexPair1.Length; j++)
-		{
 			vortexPair1[j].strength = strengthVortexPair1;
-		}
 		for (int k = 0; k < vortexPair2.Length; k++)
-		{
 			vortexPair2[k].strength = strengthVortexPair2;
-		}
 		for (int l = 0; l < sideAddFluid.Length; l++)
-		{
 			sideAddFluid[l].strength = strengthSideAddFluid;
-		}
-		skimmerClockwise0.Rotate(Vector3.up, Mathf.Min(0.04f, strengthVortexPair0 * 20f * Time.deltaTime));
-		skimmerCounterClockwise0.Rotate(Vector3.up, 0f - Mathf.Min(0.04f, strengthVortexPair0 * 20f * Time.deltaTime));
-		skimmerClockwise1.Rotate(Vector3.up, Mathf.Min(0.04f, strengthVortexPair1 * 20f * Time.deltaTime));
-		skimmerCounterClockwise1.Rotate(Vector3.up, 0f - Mathf.Min(0.04f, strengthVortexPair1 * 20f * Time.deltaTime));
-		skimmerClockwise2.Rotate(Vector3.up, Mathf.Min(0.04f, strengthVortexPair2 * 20f * Time.deltaTime));
-		skimmerCounterClockwise2.Rotate(Vector3.up, 0f - Mathf.Min(0.04f, strengthVortexPair2 * 20f * Time.deltaTime));
+		float rot0 = Mathf.Min(0.04f, strengthVortexPair0 * 20f * Time.deltaTime);
+		float rot1 = Mathf.Min(0.04f, strengthVortexPair1 * 20f * Time.deltaTime);
+		float rot2 = Mathf.Min(0.04f, strengthVortexPair2 * 20f * Time.deltaTime);
+		skimmerClockwise0.Rotate(Vector3.up, rot0);
+		skimmerCounterClockwise0.Rotate(Vector3.up, -rot0);
+		skimmerClockwise1.Rotate(Vector3.up, rot1);
+		skimmerCounterClockwise1.Rotate(Vector3.up, -rot1);
+		skimmerClockwise2.Rotate(Vector3.up, rot2);
+		skimmerCounterClockwise2.Rotate(Vector3.up, -rot2);
 	}
 }

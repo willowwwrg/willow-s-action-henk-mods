@@ -131,11 +131,7 @@ public class HenkSWNotifications : Singleton<HenkSWNotifications>
 
 	public void FetchAllSessions(bool onlyGetChangesSinceLastCheck = true, bool forceCheck = false)
 	{
-		if (initialized && !retrievingSessions && ((int)(HenkUtils.GetUnixTimestamp() - lastUpdateTime) >= minUpdateInterval || forceCheck))
-		{
-			retrievingSessions = true;
-			StartCoroutine(FetchAllSessionsWebcall(onlyGetChangesSinceLastCheck));
-		}
+		// ragesquid.com server is no longer available - skip web calls
 	}
 
 	private IEnumerator FetchAllSessionsWebcall(bool onlyGetChangesSinceLastCheck)

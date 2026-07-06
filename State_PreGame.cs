@@ -106,6 +106,8 @@ public class State_PreGame : GameState
 		if (!Singleton<PlayerManager>.SP.ghostSet)
 		{
 			lastSelectedGhostType = ghostType;
+			// Clear ghost coin times so stale data from previous ghost doesn't carry over
+			Singleton<BonusSplitManager>.SP.ClearGhostTimes();
 			StartCoroutine(DownloadReplay(ghostType, playerID));
 		}
 	}

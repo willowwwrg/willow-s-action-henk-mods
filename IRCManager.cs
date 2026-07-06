@@ -36,6 +36,8 @@ public class IRCManager : Singleton<IRCManager>
 
 	private int count;
 
+	private const int maxChannelTextLength = 8192;
+
 	private void Update()
 	{
 		if (irc != null)
@@ -49,12 +51,16 @@ public class IRCManager : Singleton<IRCManager>
 				connectionState = IRCConnectionState.Disconnected;
 			}
 		}
-		allSpawnedGhosts.Remove(null);
+		allSpawnedGhosts.RemoveAll(g => g == null);
+		if (playersToAdd.Count == 0)
+		{
+			return;
+		}
 		bool num = Singleton<HenkSWLeaderboards>.SP.downloadingCustomReplay != 0L || Singleton<HenkSWLeaderboards>.SP.currentlyDownloadingScoresForUserIDs;
 		bool flag = Singleton<GamestateManager>.SP.GetCurrentGameMode() == GameMode.Singleplayer && (Singleton<GamestateManager>.SP.IsCurrentState(typeof(State_PreGame)) || Singleton<GamestateManager>.SP.IsCurrentState(typeof(State_InGame)) || Singleton<GamestateManager>.SP.IsCurrentState(typeof(State_PostGame)));
 		bool flag2 = Singleton<LevelBatchManager>.SP.GetCurrentLevelObj() != null;
 		bool flag3 = Singleton<HenkSWLeaderboards>.SP.GetLevelFromLeaderboardHandle(Singleton<HenkSWLeaderboards>.SP.currentLeaderboardHandle) == Singleton<LevelBatchManager>.SP.GetCurrentLevelObj();
-		if (!num && flag && flag3 && flag2 && playersToAdd.Count > 0)
+		if (!num && flag && flag3 && flag2)
 		{
 			currentNicknameSpawning = nicksToAdd[0];
 			GameObject item = Singleton<PlayerManager>.SP.SpawnGhost(GhostType.CustomID, playersToAdd[0]);
@@ -173,6 +179,9 @@ public class IRCManager : Singleton<IRCManager>
 		string key3 = (key2 = text);
 		key2 = dictionary2[key2];
 		dictionary2[key3] = key2 + text2;
+		// Trim channel text to prevent unbounded memory growth over long sessions
+		if (channelsText[text].Length > maxChannelTextLength)
+			channelsText[text] = channelsText[text].Substring(channelsText[text].Length - maxChannelTextLength);
 		if (!(e.Data.Channel == text) || e.Data.Type != ReceiveType.ChannelMessage)
 		{
 			return;

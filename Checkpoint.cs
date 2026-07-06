@@ -229,16 +229,17 @@ public class Checkpoint : MonoBehaviour
 
 	private void TriggerCheckpointLMP(GameObject player)
 	{
-		Checkpoint mostRecentCheckpoint = player.GetComponent<PlayerWaypointManager>().GetMostRecentCheckpoint();
+		PlayerWaypointManager pwm = player.GetComponent<PlayerWaypointManager>();
+		Checkpoint mostRecentCheckpoint = pwm.GetMostRecentCheckpoint();
 		if (mostRecentCheckpoint != null && Singleton<CheckpointManager>.SP.GetCheckpointNumber(this) <= Singleton<CheckpointManager>.SP.GetCheckpointNumber(mostRecentCheckpoint))
 		{
 			return;
 		}
-		player.GetComponent<PlayerWaypointManager>().SetMostRecentCheckpoint(this, 0f);
+		pwm.SetMostRecentCheckpoint(this, 0f);
 		if (!isPassed)
 		{
-			positionAlongTrackWhenPassed = player.GetComponent<PlayerWaypointManager>().GetPositionAlongTrack();
-			LMPCheckpointWhenPassed = player.GetComponent<PlayerWaypointManager>().GetCurrentLMPCheckpoint();
+			positionAlongTrackWhenPassed = pwm.GetPositionAlongTrack();
+			LMPCheckpointWhenPassed = pwm.GetCurrentLMPCheckpoint();
 		}
 		if (IsRegularCheckpoint())
 		{

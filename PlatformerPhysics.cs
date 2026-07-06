@@ -4,6 +4,10 @@ public class PlatformerPhysics : MonoBehaviour
 {
 	private RaycastCollider charcollider;
 
+	private GrapplingHook grapplingHook;
+
+	private PlayerDeath playerDeath;
+
 	public PlatformerInput input;
 
 	public PlatformerMovement movement;
@@ -49,6 +53,8 @@ public class PlatformerPhysics : MonoBehaviour
 	private void Awake()
 	{
 		charcollider = GetComponent<RaycastCollider>();
+		grapplingHook = GetComponent<GrapplingHook>();
+		playerDeath = GetComponent<PlayerDeath>();
 		UpdateMutators();
 	}
 
@@ -64,7 +70,6 @@ public class PlatformerPhysics : MonoBehaviour
 
 	public void OnRespawn()
 	{
-		charcollider = GetComponent<RaycastCollider>();
 		isJumping = false;
 		jumpTimeLeft = 0f;
 		framesSinceWeLeftGround = 1000;
@@ -141,7 +146,7 @@ public class PlatformerPhysics : MonoBehaviour
 
 	public void UpdatePrediction()
 	{
-		if ((bool)GetComponent<PlayerDeath>() && GetComponent<PlayerDeath>().isDying)
+		if ((bool)playerDeath && playerDeath.isDying)
 		{
 			charcollider.predictedNormal = Vector3.up;
 			charcollider.predictedPosition = base.transform.position;
@@ -161,13 +166,12 @@ public class PlatformerPhysics : MonoBehaviour
 
 	public void UpdateAbilities()
 	{
-		if (input.abilityInput && (bool)GetComponent<GrapplingHook>() && GetComponent<GrapplingHook>().enabled)
+		if (grapplingHook != null && grapplingHook.enabled)
 		{
-			GetComponent<GrapplingHook>().EnableAbility();
-		}
-		if (!input.abilityInput && (bool)GetComponent<GrapplingHook>() && GetComponent<GrapplingHook>().enabled)
-		{
-			GetComponent<GrapplingHook>().DisableAbility();
+			if (input.abilityInput)
+				grapplingHook.EnableAbility();
+			else
+				grapplingHook.DisableAbility();
 		}
 	}
 
@@ -212,9 +216,9 @@ public class PlatformerPhysics : MonoBehaviour
 	private void UpdateSliding()
 	{
 		sliding = input.slideInput;
-		if (mustSlide || Singleton<MutatorManager>.SP.GetActiveMutator() == Mutator.SlideOnly)
+		Mutator mut = Singleton<MutatorManager>.SP.GetActiveMutator();
+		if (mustSlide || mut == Mutator.SlideOnly)
 		{
-			Debug.DrawLine(base.transform.position, base.transform.position + new Vector3(50f, 50f, 0f));
 			sliding = true;
 		}
 	}
@@ -237,7 +241,7 @@ public class PlatformerPhysics : MonoBehaviour
 		bool flag = Time.fixedTime - lastJumpTime >= jumping.minTimeBetweenJumps || !Application.isPlaying;
 		if (!isJumping && input.jumpInput && framesSinceWeLeftGround < 6 && !flag)
 		{
-			MonoBehaviour.print(GetComponent<ReplayController>().playerName + " tapping jump too fast");
+			MonoBehaviour.print("tapping jump too fast");
 		}
 		if (!isJumping && input.jumpInput && framesSinceWeLeftGround < 6 && flag)
 		{
@@ -273,10 +277,6 @@ public class PlatformerPhysics : MonoBehaviour
 			onGround = false;
 			float num = jumping.factorOfJumpForceInstantly * adjustedJumpForce;
 			charcollider.velocity += normalized * num;
-			if (drawRays)
-			{
-				Debug.DrawRay(base.transform.position, normalized, Color.blue, 1f);
-			}
 		}
 		if (isJumping)
 		{
@@ -406,10 +406,6 @@ public class PlatformerPhysics : MonoBehaviour
 		float num2 = 1f;
 		if (Physics.Raycast(base.transform.position, directionToGround, out var hitInfo, 1000f, layerMask))
 		{
-			if (drawRays)
-			{
-				Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.gray, 2f);
-			}
 			if (hitInfo.distance < charcollider.radius + num2)
 			{
 				Vector3 vector = groundNormal;
@@ -430,28 +426,15 @@ public class PlatformerPhysics : MonoBehaviour
 					charcollider.velocity -= Vector3.Dot(hitInfo.normal, charcollider.velocity) * hitInfo.normal;
 					charcollider.velocity = charcollider.velocity.normalized * magnitude;
 					SetGroundNormal(hitInfo.normal);
-					if (drawRays)
-					{
-						Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.cyan, 2f);
-						Debug.DrawRay(hitInfo.point, groundNormal, Color.green, 2f);
-					}
 				}
 				else if (hitInfo.distance > charcollider.radius + num)
 				{
 					LeftGround();
-					if (drawRays)
-					{
-						Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.magenta, 2f);
-					}
 				}
 			}
 			else if (hitInfo.distance > charcollider.radius + num)
 			{
 				LeftGround();
-				if (drawRays)
-				{
-					Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.magenta, 2f);
-				}
 			}
 		}
 		else
@@ -546,10 +529,6 @@ public class PlatformerPhysics : MonoBehaviour
 
 	public bool IsUsingAbility()
 	{
-		if ((bool)GetComponent<GrapplingHook>() && GetComponent<GrapplingHook>().enabled && GetComponent<GrapplingHook>().abilityEnabled)
-		{
-			return true;
-		}
-		return false;
+		return grapplingHook != null && grapplingHook.enabled && grapplingHook.abilityEnabled;
 	}
 }

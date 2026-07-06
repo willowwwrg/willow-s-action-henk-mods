@@ -566,7 +566,7 @@ public class HenkSWLeaderboards : Singleton<HenkSWLeaderboards>
 		Debug.Log("Start downloading replay. Tries remaining: " + numDownloadRetries);
 		SteamAPICall_t hAPICall = SteamRemoteStorage.UGCDownload(mostRecentlyDownloadedUGCHandle, 0u);
 		m_CloudDownloadUGCResult.Set(hAPICall);
-		TimeOutCheck();
+		StartCoroutine(TimeOutCheck());
 	}
 
 	private IEnumerator TimeOutCheck()
@@ -603,27 +603,22 @@ public class HenkSWLeaderboards : Singleton<HenkSWLeaderboards>
 
 	public Level GetLevelFromLeaderboardHandle(SteamLeaderboard_t handle)
 	{
-		if (!allFetchedLeaderboards.ContainsValue(handle))
-		{
-			return null;
-		}
 		foreach (KeyValuePair<string, SteamLeaderboard_t> allFetchedLeaderboard in allFetchedLeaderboards)
 		{
-			if (allFetchedLeaderboard.Value == handle)
+			if (allFetchedLeaderboard.Value != handle)
+				continue;
+			string key = allFetchedLeaderboard.Key;
+			string[] array = key.Split('_');
+			if (key.StartsWith("Lvl_") && array.Length > 1)
 			{
-				string key = allFetchedLeaderboard.Key;
-				string[] array = key.Split('_');
-				if (key.StartsWith("Lvl_") && array.Length > 1)
-				{
-					int levelCode = int.Parse(array[1]);
-					return Singleton<LevelBatchManager>.SP.GetLevelFromCode(levelCode);
-				}
-				if (key.StartsWith("WORKSHOP_") && array.Length > 1)
-				{
-					return Singleton<LevelBatchManager>.SP.GetLevelFromGuid(array[1]);
-				}
-				return null;
+				int levelCode = int.Parse(array[1]);
+				return Singleton<LevelBatchManager>.SP.GetLevelFromCode(levelCode);
 			}
+			if (key.StartsWith("WORKSHOP_") && array.Length > 1)
+			{
+				return Singleton<LevelBatchManager>.SP.GetLevelFromGuid(array[1]);
+			}
+			return null;
 		}
 		return null;
 	}

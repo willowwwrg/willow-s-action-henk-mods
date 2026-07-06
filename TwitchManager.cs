@@ -40,49 +40,8 @@ public class TwitchManager : Singleton<TwitchManager>
 
 	private void LateUpdate()
 	{
-		if (connectionState == TwitchState.Disconnected)
-		{
-			Singleton<PermaGUI>.SP.ToggleTHPanel(state: true);
-			webCheckTimeLeft -= Time.deltaTime;
-			if (webCheckTimeLeft < 0f)
-			{
-				GetStreamState();
-				webCheckTimeLeft = webCheckInterval;
-			}
-			if (openPopup && Singleton<InputManager>.SP.CheckAction(InputAction.Confirm, forceThroughDisabledInput: true))
-			{
-				AudioController.Play("ButtonForwards");
-				if (SteamManager.Initialized)
-				{
-					string text = WWW.EscapeURL(SteamFriends.GetPersonaName());
-					string text2 = BitConverter.ToString(authTicket).Replace("-", string.Empty);
-					_ = scripthost + "?steamtoken=" + text2 + "&name=" + text;
-					string text3 = "https://api.twitch.tv/kraken/oauth2/authorize?response_type=code";
-					text3 += "&client_id=eso92jbrojvj0dg02fbjaexs4meb7w4";
-					text3 = text3 + "&redirect_uri=" + WWW.EscapeURL(scripthost);
-					text3 += "&scope=user_read";
-					text3 = text3 + "&state=" + text2;
-					if (!Application.isEditor)
-					{
-						SteamFriends.ActivateGameOverlayToWebPage(text3);
-					}
-					else
-					{
-						Debug.LogWarning(text3);
-					}
-				}
-			}
-			if (!justHadPopup && !Singleton<PermaGUI>.SP.confirmationRequestUp && Singleton<InputManager>.SP.CheckAction(InputAction.Cancel, forceThroughDisabledInput: true))
-			{
-				Singleton<PermaGUI>.SP.RequestConfirmation("QuitGame", base.gameObject, "Quit game?");
-			}
-		}
-		else if (Singleton<PermaGUI>.SP.twitchPanel.activeSelf && Singleton<InputManager>.SP.CheckAction(InputAction.Confirm, forceThroughDisabledInput: true))
-		{
-			AudioController.Play("ButtonForwards");
-			Singleton<PermaGUI>.SP.ToggleTHPanel(state: false);
-		}
-		justHadPopup = false;
+		// ragesquid.com Free To Stream server is no longer available
+		// Skip all stream state polling to prevent constant failed web requests
 	}
 
 	public void QuitGame(object value)

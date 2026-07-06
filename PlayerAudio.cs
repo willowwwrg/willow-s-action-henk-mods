@@ -7,6 +7,10 @@ public class PlayerAudio : MonoBehaviour
 
 	private RaycastCollider playerCollider;
 
+	private PlatformerController controller;
+
+	private PlayerGraphics playerGraphics;
+
 	private AudioObject slideAudio;
 
 	private AudioObject slideFire;
@@ -19,6 +23,8 @@ public class PlayerAudio : MonoBehaviour
 	{
 		physics = GetComponent<PlatformerPhysics>();
 		playerCollider = GetComponent<RaycastCollider>();
+		controller = GetComponent<PlatformerController>();
+		playerGraphics = GetComponent<PlayerGraphics>();
 	}
 
 	private void Update()
@@ -50,7 +56,7 @@ public class PlayerAudio : MonoBehaviour
 		{
 			wallSlide.volume *= num;
 		}
-		if (!GetComponent<PlatformerController>().HasControl())
+		if (!controller.HasControl())
 		{
 			if ((bool)slideAudio)
 			{
@@ -65,7 +71,7 @@ public class PlayerAudio : MonoBehaviour
 				wallSlide.volume = 0f;
 			}
 		}
-		if (GetComponent<PlayerGraphics>().currentCharacter == CharacterSelect.Characters.Cedar)
+		if (playerGraphics.currentCharacter == CharacterSelect.Characters.Cedar)
 		{
 			skateRoll = PlayLoopingSound(skateRoll, physics.onGround && !flag, "Cedar_skateroll", 10f, 80f, 1f, 1.4f, 0f, 50f, 0.35f);
 			if ((bool)skateRoll)
@@ -130,43 +136,31 @@ public class PlayerAudio : MonoBehaviour
 
 	private void OnEventJump(bool wallJump)
 	{
-		if (GetComponent<PlayerGraphics>().currentCharacter == CharacterSelect.Characters.Cedar)
+		if (playerGraphics.currentCharacter == CharacterSelect.Characters.Cedar)
 		{
 			AudioController.Play("Cedar_ollie", base.transform);
 		}
-		else if (GetComponent<PlayerGraphics>().currentCharacter == CharacterSelect.Characters.Henk && GetComponent<PlayerGraphics>().currentSkinNum == 11)
+		else if (playerGraphics.currentCharacter == CharacterSelect.Characters.Henk && playerGraphics.currentSkinNum == 11)
 		{
 			if (!wallJump)
-			{
 				AudioController.Play("hariojump", base.transform);
-			}
 			else
-			{
 				AudioController.Play("hariowalljump", base.transform);
-			}
 		}
 		else if (!wallJump)
-		{
 			AudioController.Play("Jump", base.transform);
-		}
 		else
-		{
 			AudioController.Play("WallJump", base.transform);
-		}
 		Singleton<AudioManager>.SP.PlayCharacterJump(base.gameObject);
 	}
 
 	private void OnEventLand(float impactAmount)
 	{
 		float volume = Mathf.InverseLerp(0f, 25f, impactAmount);
-		if (Singleton<PlayerManager>.SP.GetPlayer().GetComponent<PlayerGraphics>().currentCharacter == CharacterSelect.Characters.Cedar)
-		{
+		if (playerGraphics.currentCharacter == CharacterSelect.Characters.Cedar)
 			AudioController.Play("Cedar_ollieland", base.transform, volume);
-		}
 		else
-		{
 			AudioController.Play("char_land", base.transform, volume);
-		}
 	}
 
 	private void OnEventWall(float impactAmount)

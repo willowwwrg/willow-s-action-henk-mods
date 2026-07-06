@@ -11,6 +11,8 @@ public class State_PostGame : GameState
 
 	public override void OnActivate()
 	{
+		// Force GC collection at natural pause point to prevent mid-run freezes
+		System.GC.Collect();
 		if (Singleton<MutatorManager>.SP.GetActiveMutator() == Mutator.None)
 		{
 			Singleton<LevelBatchManager>.SP.AddCurrentLevelToSessionLevels();

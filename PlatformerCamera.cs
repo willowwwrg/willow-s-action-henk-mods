@@ -20,6 +20,8 @@ public class PlatformerCamera : MonoBehaviour
 
 	private PlayerWaypointManager waypointManager;
 
+	private PlayerGraphics targetGraphics;
+
 	[HideInInspector]
 	private CameraState curCameraState;
 
@@ -144,6 +146,7 @@ public class PlatformerCamera : MonoBehaviour
 		physics = target.GetComponent<PlatformerPhysics>();
 		playerCollider = target.GetComponent<RaycastCollider>();
 		waypointManager = target.GetComponent<PlayerWaypointManager>();
+		targetGraphics = target.GetComponent<PlayerGraphics>();
 	}
 
 	public void ToggleExtraControls(bool enable)
@@ -303,7 +306,8 @@ public class PlatformerCamera : MonoBehaviour
 				vector3 = new Vector3(vector2.z, 0f, 0f - vector2.x);
 			}
 			float num5 = extraHeight;
-			if (Singleton<MutatorManager>.SP.GetActiveMutator() == Mutator.FirstPerson && physics.sliding)
+			Mutator camMutator = Singleton<MutatorManager>.SP.GetActiveMutator();
+			if (camMutator == Mutator.FirstPerson && physics.sliding)
 			{
 				num5 = extraHeight * 0.8f;
 			}
@@ -366,10 +370,10 @@ public class PlatformerCamera : MonoBehaviour
 			{
 				physicsRotation *= camShakeAdd;
 			}
-			if (Singleton<MutatorManager>.SP.GetActiveMutator() == Mutator.RotatingCamera && (bool)target.GetComponent<PlayerGraphics>())
+			if (camMutator == Mutator.RotatingCamera && (bool)targetGraphics)
 			{
 				Vector3 eulerAngles = physicsRotation.eulerAngles;
-				eulerAngles.z = target.GetComponent<PlayerGraphics>().GetTiltRotation();
+				eulerAngles.z = targetGraphics.GetTiltRotation();
 				physicsRotation.eulerAngles = eulerAngles;
 			}
 			if (viewWidth != 0f && dollyZoom && (bool)base.camera)
@@ -380,10 +384,6 @@ public class PlatformerCamera : MonoBehaviour
 			{
 				SnapCamera();
 			}
-			Debug.DrawLine(physicsPosition, vector5, Color.green);
-			Debug.DrawLine(physicsPosition, vector7, Color.green);
-			Debug.DrawLine(vector4, vector5, Color.green);
-			Debug.DrawLine(vector4, target.position, Color.green);
 		}
 		yPosOfDeathVolume = -1000f;
 	}
@@ -393,7 +393,8 @@ public class PlatformerCamera : MonoBehaviour
 		if (Singleton<GamestateManager>.SP.IsCurrentState(typeof(State_InGame)) || Singleton<GamestateManager>.SP.IsCurrentState(typeof(State_InGameMultiplayer)))
 		{
 			SetCameraState(CameraState.Default);
-			if ((bool)target.GetComponent<GrapplingHook>() && target.GetComponent<GrapplingHook>().enabled)
+			GrapplingHook gh = target.GetComponent<GrapplingHook>();
+			if ((bool)gh && gh.enabled)
 			{
 				SetCameraState(CameraState.Hook);
 			}
@@ -434,7 +435,8 @@ public class PlatformerCamera : MonoBehaviour
 
 	public void SetCameraState(CameraState state)
 	{
-		if ((state == CameraState.Default || state == CameraState.Hook) && Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelType == LevelType.Bonus)
+		Level currentLevel = Singleton<LevelBatchManager>.SP.GetCurrentLevelObj();
+		if ((state == CameraState.Default || state == CameraState.Hook) && currentLevel.levelType == LevelType.Bonus)
 		{
 			state = CameraState.Bonus;
 		}
@@ -567,36 +569,40 @@ public class PlatformerCamera : MonoBehaviour
 			posSmoothing = 15f;
 			rotSmoothing = 15f;
 		}
-		else if (Singleton<MutatorManager>.SP.GetActiveMutator() == Mutator.FirstPerson)
+		else
 		{
-			baseDistance = 0.01f;
-			extraDistAtMaxSpeed = 0f;
-			extraHeight = 1.75f;
-			posSmoothing = 25f;
-			rotSmoothing = 25f;
-			horizontalAdd = 0f;
-			horizontalLookBack = -2f;
-			horizontalAccel = 0.075f;
-			staticFollow = false;
-		}
-		else if (Singleton<MutatorManager>.SP.GetActiveMutator() == Mutator.OppositeCamera)
-		{
-			baseDistance = 0f - baseDistance;
-			extraDistAtMaxSpeed = 0f - extraDistAtMaxSpeed;
-		}
-		else if (Singleton<MutatorManager>.SP.GetActiveMutator() == Mutator.RotatingCamera)
-		{
-			baseDistance = 13f;
-			if (state == CameraState.Hook)
+			Mutator activeMutator = Singleton<MutatorManager>.SP.GetActiveMutator();
+			if (activeMutator == Mutator.FirstPerson)
 			{
-				baseDistance = 23f;
+				baseDistance = 0.01f;
+				extraDistAtMaxSpeed = 0f;
+				extraHeight = 1.75f;
+				posSmoothing = 25f;
+				rotSmoothing = 25f;
+				horizontalAdd = 0f;
+				horizontalLookBack = -2f;
+				horizontalAccel = 0.075f;
+				staticFollow = false;
 			}
-			extraDistAtMaxSpeed = 0f;
-			extraHeight = 2f;
-			posSmoothing = 10f;
-			rotSmoothing = 10f;
-			horizontalAdd = 0f;
-			verticalAccel = 0f;
+			else if (activeMutator == Mutator.OppositeCamera)
+			{
+				baseDistance = 0f - baseDistance;
+				extraDistAtMaxSpeed = 0f - extraDistAtMaxSpeed;
+			}
+			else if (activeMutator == Mutator.RotatingCamera)
+			{
+				baseDistance = 13f;
+				if (state == CameraState.Hook)
+				{
+					baseDistance = 23f;
+				}
+				extraDistAtMaxSpeed = 0f;
+				extraHeight = 2f;
+				posSmoothing = 10f;
+				rotSmoothing = 10f;
+				horizontalAdd = 0f;
+				verticalAccel = 0f;
+			}
 		}
 	}
 

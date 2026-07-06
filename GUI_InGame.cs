@@ -307,6 +307,8 @@ public class GUI_InGame : GUI_Base
 		yield return new WaitForEndOfFrame();
 		yield return new WaitForEndOfFrame();
 		AudioController.Play("Reset");
+		Singleton<PlayerManager>.SP.RemoveGhosts();
+		Singleton<PlayerManager>.SP.ghostSet = false;
 		Singleton<GamestateManager>.SP.SetState(typeof(State_PreGame));
 	}
 

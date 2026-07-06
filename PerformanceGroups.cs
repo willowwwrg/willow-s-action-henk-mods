@@ -49,8 +49,25 @@ public class PerformanceGroups : MonoBehaviour
 		{
 			performanceGroup.terrain.enabled = performanceGroup.enabled;
 		}
+		// If re-enabling, refresh the renderer list in case new objects spawned since the initial scan
+		if (performanceGroup.enabled && performanceGroup.gameObjects != null)
+		{
+			performanceGroup.allRenderers.Clear();
+			foreach (GameObject go in performanceGroup.gameObjects)
+			{
+				if (go != null)
+					performanceGroup.allRenderers.AddRange(go.GetComponentsInChildren<Renderer>());
+			}
+			if (performanceGroup.findByName != string.Empty)
+			{
+				GameObject found = GameObject.Find(performanceGroup.findByName);
+				if (found != null)
+					performanceGroup.allRenderers.AddRange(found.GetComponentsInChildren<Renderer>());
+			}
+		}
 		foreach (Renderer allRenderer in performanceGroup.allRenderers)
 		{
+			if (allRenderer == null) continue;
 			allRenderer.enabled = performanceGroup.enabled;
 			ParticleSystem ps = allRenderer.GetComponent<ParticleSystem>();
 			if (ps != null)
@@ -65,16 +82,5 @@ public class PerformanceGroups : MonoBehaviour
 
 	private void Update()
 	{
-		if (!inEditMode)
-		{
-			return;
-		}
-		for (int i = 0; i < groups.Length; i++)
-		{
-			if (Input.GetKeyDown((KeyCode)(49 + i)))
-			{
-				ToggleGroup(i);
-			}
-		}
 	}
 }
