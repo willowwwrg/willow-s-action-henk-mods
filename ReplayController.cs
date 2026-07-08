@@ -245,7 +245,8 @@ public class ReplayController : MonoBehaviour
 			}
 			while (intString != null && intString != string.Empty);
 			replay.Clear();
-			replay.Capacity = num;
+			if (num > 0 && num < 1000000)
+				replay.Capacity = num;
 			ReplayFrame replayFrame = new ReplayFrame();
 			replayFrame.frameNumber = 0;
 			replayFrame.walkInput = 0f;
@@ -411,6 +412,11 @@ public class ReplayController : MonoBehaviour
 			UnityEngine.Object.Destroy(base.gameObject);
 		}
 		isInitialized = true;
+	}
+
+	public GhostType GetReplayType()
+	{
+		return replayType;
 	}
 
 	public ReplayFrame GetCurrentReplayFrame()

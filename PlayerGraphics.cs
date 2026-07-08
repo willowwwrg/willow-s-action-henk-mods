@@ -39,6 +39,8 @@ public class PlayerGraphics : MonoBehaviour
 
 	private GrapplingHook grapplingHook;
 
+	private ReplayController replayController;
+
 	private CharacterModel cachedCharacterModel;
 
 	private float tiltRotation;
@@ -89,6 +91,7 @@ public class PlayerGraphics : MonoBehaviour
 		playerCollider = GetComponent<RaycastCollider>();
 		controller = GetComponent<PlatformerController>();
 		grapplingHook = GetComponent<GrapplingHook>();
+		replayController = GetComponent<ReplayController>();
 		ghostInitialized = false;
 		taunting = false;
 	}
@@ -352,8 +355,9 @@ public class PlayerGraphics : MonoBehaviour
 		}
 		if (GetComponent<PlatformerController>().isExternalControlled)
 		{
-			bool isChallengerOnChallengeLevel = Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelType == LevelType.Challenge
-				&& Singleton<PlayerManager>.SP.ghostType == GhostType.Challenger;
+			bool isChallengerOnChallengeLevel = replayController != null
+				&& replayController.GetReplayType() == GhostType.Challenger
+				&& Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelType == LevelType.Challenge;
 			if (!isChallengerOnChallengeLevel)
 				MakeTransparent();
 		}
@@ -522,9 +526,7 @@ public class PlayerGraphics : MonoBehaviour
 		InterpolatePhysics();
 		if (hasGhostGraphics)
 		{
-			// Challenger ghost on challenge levels stays fully visible
-			// All other ghosts (PB, WR, friends) use normal distance-based transparency
-			bool isChallenger = Singleton<PlayerManager>.SP.ghostType == GhostType.Challenger;
+			bool isChallenger = replayController != null && replayController.GetReplayType() == GhostType.Challenger;
 			if (!isChallenger || Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelType != LevelType.Challenge)
 				UpdateGhostAlpha();
 		}
