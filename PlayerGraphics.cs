@@ -350,9 +350,12 @@ public class PlayerGraphics : MonoBehaviour
 				Camera.main.GetComponent<CameraEffectsManager>().UpdateMaterialForStyle(skinnedMeshRenderer, isCharacter: true);
 			}
 		}
-		if (GetComponent<PlatformerController>().isExternalControlled && Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelType != LevelType.Challenge)
+		if (GetComponent<PlatformerController>().isExternalControlled)
 		{
-			MakeTransparent();
+			bool isChallengerOnChallengeLevel = Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelType == LevelType.Challenge
+				&& Singleton<PlayerManager>.SP.ghostType == GhostType.Challenger;
+			if (!isChallengerOnChallengeLevel)
+				MakeTransparent();
 		}
 		Renderer[] componentsInChildren3 = animatedModel.GetComponentsInChildren<Renderer>();
 		foreach (Renderer renderer in componentsInChildren3)
@@ -517,9 +520,13 @@ public class PlayerGraphics : MonoBehaviour
 			return;
 		}
 		InterpolatePhysics();
-		if (hasGhostGraphics && Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelType != LevelType.Challenge)
+		if (hasGhostGraphics)
 		{
-			UpdateGhostAlpha();
+			// Challenger ghost on challenge levels stays fully visible
+			// All other ghosts (PB, WR, friends) use normal distance-based transparency
+			bool isChallenger = Singleton<PlayerManager>.SP.ghostType == GhostType.Challenger;
+			if (!isChallenger || Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelType != LevelType.Challenge)
+				UpdateGhostAlpha();
 		}
 		bool flag = physics.onGround;
 		float value = playerCollider.velocity.magnitude;

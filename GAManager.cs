@@ -19,6 +19,13 @@ public class GAManager : Singleton<GAManager>
 		// GameAnalytics server is no longer reachable, skip all GA calls
 	}
 
+	private void Awake()
+	{
+		// Stop the GA submit queue permanently to prevent dead web requests
+		GA_Queue.EndSubmit();
+		GA_Queue.MAXQUEUESIZE = 0;
+	}
+
 	private void GenericUpdate()
 	{
 		lastUpdate = Time.time;
