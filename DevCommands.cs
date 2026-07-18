@@ -122,6 +122,11 @@ public class DevCommands : MonoBehaviour
 		StartCoroutine(GeneratePerformanceGroupsDelayed());
 	}
 
+	private void LevelFileLoadedWorkshop()
+	{
+		LevelFileLoaded();
+	}
+
 	private IEnumerator GeneratePerformanceGroupsDelayed()
 	{
 		yield return new WaitForSeconds(2f);
