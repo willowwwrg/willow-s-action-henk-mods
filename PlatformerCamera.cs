@@ -178,7 +178,7 @@ public class PlatformerCamera : MonoBehaviour
 		}
 		if (hasCameraStateInput)
 		{
-			if (Singleton<MutatorManager>.SP.GetActiveMutator() == Mutator.None)
+			if (Singleton<MutatorManager>.SP.GetActiveMutator() == Mutator.None || Singleton<GamestateManager>.SP.IsCurrentState(typeof(State_PostGame)))
 			{
 				if (Input.GetKeyDown(KeyCode.Alpha1))
 				{
