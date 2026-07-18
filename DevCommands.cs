@@ -40,6 +40,8 @@ public class DevCommands : MonoBehaviour
 
 	private bool performanceMode;
 
+	private bool modOptionsMode;
+
 	private PerformanceGroups performanceGroups;
 
 	private bool skyboxEnabled = true;
@@ -61,9 +63,22 @@ public class DevCommands : MonoBehaviour
 
 	private const string FullGameModeKey = "FullGameMode";
 
+	private const string ChallengeGhostTransparencyKey = "ChallengeGhostTransparency";
+
 	public static bool IsFullGameMode()
 	{
 		return PlayerPrefs.GetInt(FullGameModeKey, 0) == 1;
+	}
+
+	public static bool IsChallengeGhostTransparent()
+	{
+		return PlayerPrefs.GetInt(ChallengeGhostTransparencyKey, 1) == 1;
+	}
+
+	private void ToggleChallengeGhostTransparency()
+	{
+		PlayerPrefs.SetInt(ChallengeGhostTransparencyKey, IsChallengeGhostTransparent() ? 0 : 1);
+		PlayerPrefs.Save();
 	}
 
 	private void ToggleFullGameMode()
@@ -222,11 +237,30 @@ public class DevCommands : MonoBehaviour
 		string text2 = text;
 		text = text2 + "\nFPS/sec: " + (int)(1f / smoothDT) + "\nms/sec: " + (smoothDT * 1000f).ToString("N1");
 		text = ((smoothDT2 == 0f) ? (text + "\nWaiting for 10sec..") : (text + "\nms/10sec: " + (smoothDT2 * 1000f).ToString("N1")));
+		string splitColor = (Singleton<BonusSplitManager>.SP.SplitFrequency == 0) ? "[FF0000]" : "[00FF00]";
+		text += "\n" + splitColor + "Splits: " + splitModeLabels[Singleton<BonusSplitManager>.SP.SplitFrequency] + "[-]";
+		string fgmColor = IsFullGameMode() ? "[FF0000]" : "[00FF00]";
+		text += "\n" + fgmColor + "C+B ghosts: " + (IsFullGameMode() ? "Off" : "On") + "[-]";
+		string cgtColor = IsChallengeGhostTransparent() ? "[00FF00]" : "[FF0000]";
+		text += "\n" + cgtColor + "Challenge transparency: " + (IsChallengeGhostTransparent() ? "On" : "Off") + "[-]";
 		fpsLabel.text = text;
 	}
 
 	private void UpdateText()
 	{
+		if (modOptionsMode)
+		{
+			string modText = "[FF8000]Mod options:[-]\n";
+			modText += "[007FFF]0.[-] go back\n";
+			string splitColor = (Singleton<BonusSplitManager>.SP.SplitFrequency == 0) ? "[FF0000]" : "[00FF00]";
+			modText += "[007FFF]1.[-] Bonus splits: " + splitColor + splitModeLabels[Singleton<BonusSplitManager>.SP.SplitFrequency] + "[-]\n";
+			string fgmColor = IsFullGameMode() ? "[FF0000]" : "[00FF00]";
+			modText += "[007FFF]2.[-] Challenge and bonus ghosts: " + fgmColor + (IsFullGameMode() ? "Off" : "On") + "[-]\n";
+			string cgtColor = IsChallengeGhostTransparent() ? "[00FF00]" : "[FF0000]";
+			modText += "[007FFF]3.[-] Challenge ghost transparency: " + cgtColor + (IsChallengeGhostTransparent() ? "On" : "Off") + "[-]\n";
+			label.text = modText;
+			return;
+		}
 		if (!performanceMode)
 		{
 			string text = "[FF8000]Action Henk developer:[-]\n";
@@ -251,10 +285,7 @@ public class DevCommands : MonoBehaviour
 			}
 			text += "[007FFF]8.[-] Disable all particles\n";
 			text += "[007FFF]9.[-] Party Train!\n";
-			string splitColor = (Singleton<BonusSplitManager>.SP.SplitFrequency == 0) ? "[FF0000]" : "[00FF00]";
-			text += "[007FFF]Q.[-] Cycle bonus splits: " + splitColor + splitModeLabels[Singleton<BonusSplitManager>.SP.SplitFrequency] + "[-]\n";
-			string fgmColor = IsFullGameMode() ? "[FF0000]" : "[00FF00]";
-			text += "[007FFF]F.[-] Challenge and bonus ghosts: " + fgmColor + (IsFullGameMode() ? "Off" : "On") + "[-]\n";
+			text += "[007FFF]`.[-] Mod options\n";
 			label.text = text;
 			return;
 		}
@@ -277,6 +308,30 @@ public class DevCommands : MonoBehaviour
 
 	private void CheckCommands()
 	{
+		if (modOptionsMode)
+		{
+			if (Input.GetKeyDown(KeyCode.Alpha0))
+			{
+				modOptionsMode = false;
+				UpdateText();
+			}
+			if (Input.GetKeyDown(KeyCode.Alpha1))
+			{
+				Singleton<BonusSplitManager>.SP.CycleSplitFrequency();
+				UpdateText();
+			}
+			if (Input.GetKeyDown(KeyCode.Alpha2))
+			{
+				ToggleFullGameMode();
+				UpdateText();
+			}
+			if (Input.GetKeyDown(KeyCode.Alpha3))
+			{
+				ToggleChallengeGhostTransparency();
+				UpdateText();
+			}
+			return;
+		}
 		if (!performanceMode)
 		{
 			if (Input.GetKeyDown(KeyCode.Alpha0))
@@ -334,14 +389,9 @@ public class DevCommands : MonoBehaviour
 				GameObject p = Singleton<PlayerManager>.SP.GetPlayer();
 				if (p != null) p.GetComponent<PlayerGraphics>().NextSkin();
 			}
-			if (Input.GetKeyDown(KeyCode.Q))
+			if (Input.GetKeyDown(KeyCode.BackQuote))
 			{
-				Singleton<BonusSplitManager>.SP.CycleSplitFrequency();
-				UpdateText();
-			}
-			if (Input.GetKeyDown(KeyCode.F))
-			{
-				ToggleFullGameMode();
+				modOptionsMode = true;
 				UpdateText();
 			}
 			if (Input.GetKeyDown(KeyCode.Alpha7))

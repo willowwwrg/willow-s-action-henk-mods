@@ -358,7 +358,9 @@ public class PlayerGraphics : MonoBehaviour
 			bool isChallengerOnChallengeLevel = replayController != null
 				&& replayController.GetReplayType() == GhostType.Challenger
 				&& Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelType == LevelType.Challenge;
-			if (!isChallengerOnChallengeLevel)
+			bool skipTransparency = isChallengerOnChallengeLevel || 
+				(!DevCommands.IsChallengeGhostTransparent() && Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelType == LevelType.Challenge);
+			if (!skipTransparency)
 				MakeTransparent();
 		}
 		Renderer[] componentsInChildren3 = animatedModel.GetComponentsInChildren<Renderer>();
@@ -527,7 +529,8 @@ public class PlayerGraphics : MonoBehaviour
 		if (hasGhostGraphics)
 		{
 			bool isChallenger = replayController != null && replayController.GetReplayType() == GhostType.Challenger;
-			if (!isChallenger || Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelType != LevelType.Challenge)
+			bool onChallengeLevel = Singleton<LevelBatchManager>.SP.GetCurrentLevelObj().levelType == LevelType.Challenge;
+			if (!onChallengeLevel || (DevCommands.IsChallengeGhostTransparent() && !isChallenger))
 				UpdateGhostAlpha();
 		}
 		bool flag = physics.onGround;
